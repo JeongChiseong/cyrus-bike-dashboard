@@ -91,6 +91,28 @@
             display: none;
         }
         
+        .control-buttons {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .control-btn {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .control-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        
         .metrics-overview {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -190,6 +212,16 @@
             text-align: center;
         }
         
+        .warning-message {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
         @media (max-width: 768px) {
             .charts-section {
                 grid-template-columns: 1fr;
@@ -220,7 +252,7 @@
                 <button class="upload-btn" onclick="document.getElementById('jsonFileInput').click()">
                     📤 JSON 파일 선택
                 </button>
-                <input type="file" id="jsonFileInput" class="file-input" accept=".json">
+                <input type="file" id="jsonFileInput" class="file-input" accept=".json" onchange="handleJSONUpload(event)">
             </div>
             <p style="color: #666; font-size: 0.9em;">
                 지원 파일: cyrus-bike-YYYY-MM.json 또는 cyrus-bike-all-data.json
@@ -229,6 +261,11 @@
 
         <!-- 대시보드 콘텐츠 -->
         <div class="dashboard-content" id="dashboardContent">
+            <!-- 컨트롤 버튼 -->
+            <div class="control-buttons">
+                <button class="control-btn" onclick="resetDashboard()">🔄 새 파일 업로드</button>
+            </div>
+            
             <!-- 기간 정보 -->
             <div class="period-info" id="periodInfo"></div>
 
@@ -238,11 +275,11 @@
             <!-- 차트 섹션 -->
             <div class="charts-section">
                 <div class="chart-container">
-                    <h3>👥 사용자 활동 추이</h3>
+                    <h3>👥 사용자 활동 분석</h3>
                     <canvas id="userChart" class="chart-canvas"></canvas>
                 </div>
                 <div class="chart-container">
-                    <h3>🏃‍♂️ 운동시간 추이</h3>
+                    <h3>🏃‍♂️ 운동 지표</h3>
                     <canvas id="exerciseChart" class="chart-canvas"></canvas>
                 </div>
             </div>
@@ -250,19 +287,19 @@
             <!-- 전력 & 보상 차트 -->
             <div class="charts-section">
                 <div class="chart-container">
-                    <h3>⚡ 전력 생산량 추이</h3>
+                    <h3>⚡ 전력 생산량</h3>
                     <canvas id="powerChart" class="chart-canvas"></canvas>
                 </div>
                 <div class="chart-container">
-                    <h3>💰 보상 지급 추이</h3>
-                    <canvas id="rewardTrendChart" class="chart-canvas"></canvas>
+                    <h3>💰 보상 지급 현황</h3>
+                    <canvas id="rewardChart" class="chart-canvas"></canvas>
                 </div>
             </div>
 
             <!-- 보상 선호도 분석 -->
             <div class="chart-container full-width-chart">
                 <h3>🎯 사용자 보상 선호도 분석</h3>
-                <canvas id="rewardChart" class="chart-canvas"></canvas>
+                <canvas id="preferenceChart" class="chart-canvas"></canvas>
             </div>
         </div>
     </div>
@@ -274,14 +311,6 @@
         // 페이지 로드 후 이벤트 리스너 설정
         document.addEventListener('DOMContentLoaded', function() {
             console.log('페이지 로드 완료');
-            
-            // 파일 입력 이벤트 리스너
-            const fileInput = document.getElementById('jsonFileInput');
-            if (fileInput) {
-                fileInput.addEventListener('change', handleJSONUpload);
-            }
-
-            // 드래그 앤 드롭 이벤트 설정
             setupDragAndDrop();
             
             // Chart.js 로드 확인
@@ -310,10 +339,8 @@
                 e.preventDefault();
                 uploadSection.classList.remove('dragover');
                 const files = e.dataTransfer.files;
-                if (files.length > 0 && files[0].type === 'application/json') {
+                if (files.length > 0) {
                     loadJSONFile(files[0]);
-                } else {
-                    showError('JSON 파일만 업로드 가능합니다.');
                 }
             });
         }
@@ -322,16 +349,21 @@
         function handleJSONUpload(event) {
             console.log('파일 업로드 이벤트 발생');
             const file = event.target.files[0];
-            if (file && file.type === 'application/json') {
+            if (file) {
                 loadJSONFile(file);
-            } else {
-                showError('올바른 JSON 파일을 선택해주세요.');
             }
         }
 
         // JSON 파일 로드
         function loadJSONFile(file) {
             console.log('JSON 파일 로드 시작:', file.name);
+            
+            // 파일 확장자 검사
+            if (!file.name.toLowerCase().endsWith('.json')) {
+                showError('JSON 파일만 업로드 가능합니다.');
+                return;
+            }
+            
             const reader = new FileReader();
             
             reader.onload = function(e) {
@@ -349,10 +381,10 @@
                     // 기존 차트 제거
                     destroyCharts();
                     
-                    // 잠시 대기 후 차트 생성
-                    setTimeout(() => {
+                    // 데이터 검증 및 처리
+                    if (validateJSONData(jsonData)) {
                         processJSONData(jsonData);
-                    }, 100);
+                    }
                     
                 } catch (error) {
                     console.error('JSON 파싱 오류:', error);
@@ -367,6 +399,58 @@
             reader.readAsText(file);
         }
 
+        // JSON 데이터 검증
+        function validateJSONData(jsonData) {
+            // 다중 월 데이터 검증
+            if (jsonData.totalMonths && jsonData.data) {
+                if (!Array.isArray(jsonData.data)) {
+                    showError('올바르지 않은 데이터 형식입니다. data 배열이 필요합니다.');
+                    return false;
+                }
+                
+                // 각 월 데이터 검증
+                for (let monthData of jsonData.data) {
+                    if (!validateMonthData(monthData)) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            
+            // 단일 월 데이터 검증
+            if (jsonData.year && jsonData.month) {
+                return validateMonthData(jsonData);
+            }
+            
+            showError('올바른 사이러스 바이크 JSON 파일이 아닙니다. year/month 또는 totalMonths/data 구조가 필요합니다.');
+            return false;
+        }
+
+        // 월 데이터 검증
+        function validateMonthData(monthData) {
+            const requiredFields = {
+                'userMetrics': ['dau', 'mau', 'pointsOnly', 'tokensOnly', 'both', 'activeDevices'],
+                'engagementMetrics': ['usedDevices', 'avgExerciseTime', 'totalExerciseTime'],
+                'performanceMetrics': ['powerWh', 'powerKwh', 'totalPoints', 'totalTokens']
+            };
+            
+            for (let category in requiredFields) {
+                if (!monthData[category]) {
+                    showError(`필수 데이터 카테고리가 누락되었습니다: ${category}`);
+                    return false;
+                }
+                
+                for (let field of requiredFields[category]) {
+                    if (monthData[category][field] === undefined || monthData[category][field] === null) {
+                        showWarning(`데이터 필드가 누락되었습니다: ${category}.${field} (0으로 처리됩니다)`);
+                        monthData[category][field] = 0;
+                    }
+                }
+            }
+            
+            return true;
+        }
+
         // JSON 데이터 처리
         function processJSONData(jsonData) {
             try {
@@ -377,9 +461,6 @@
                 } else if (jsonData.year && jsonData.month) {
                     // 단일 월 데이터 파일
                     displaySingleMonthData(jsonData);
-                } else {
-                    showError('올바른 사이러스 바이크 JSON 파일이 아닙니다.');
-                    return;
                 }
                 
                 // 업로드 섹션 숨기고 대시보드 표시
@@ -400,8 +481,8 @@
             // 기간 정보 표시
             document.getElementById('periodInfo').innerHTML = `
                 <h2>${data.year}년 ${data.month}월 운동 데이터</h2>
-                <p>데이터 내보내기 일시: ${new Date(data.metadata.exportDate).toLocaleString('ko-KR')}</p>
-                ${data.metadata.rawDataRecords ? `<p>원시 데이터 레코드 수: ${data.metadata.rawDataRecords.toLocaleString()}개</p>` : ''}
+                <p>데이터 내보내기 일시: ${data.metadata?.exportDate ? new Date(data.metadata.exportDate).toLocaleString('ko-KR') : '정보 없음'}</p>
+                ${data.metadata?.rawDataRecords ? `<p>원시 데이터 레코드 수: ${data.metadata.rawDataRecords.toLocaleString()}개</p>` : ''}
             `;
 
             // 메트릭 카드 생성
@@ -419,29 +500,33 @@
             const months = data.data.map(d => `${d.year}년 ${d.month}월`).join(', ');
             document.getElementById('periodInfo').innerHTML = `
                 <h2>다중 월 데이터 분석 (${data.totalMonths}개월)</h2>
-                <p>${months}</p>
-                <p>데이터 내보내기 일시: ${new Date(data.metadata.exportDate).toLocaleString('ko-KR')}</p>
+                <p>분석 기간: ${months}</p>
+                <p>데이터 내보내기 일시: ${data.metadata?.exportDate ? new Date(data.metadata.exportDate).toLocaleString('ko-KR') : '정보 없음'}</p>
             `;
 
             // 메트릭 카드 생성 (최신 월 기준)
             const latestMonth = data.data[data.data.length - 1];
-            createMetricCards(latestMonth);
+            createMetricCards(latestMonth, '최신 월 기준');
             
             // 차트 생성 (트렌드 분석)
             createTrendCharts(data.data);
         }
 
         // 메트릭 카드 생성
-        function createMetricCards(data) {
+        function createMetricCards(data, subtitle = '') {
+            const safeGet = (obj, path, defaultValue = 0) => {
+                return path.split('.').reduce((o, p) => (o && o[p] !== undefined) ? o[p] : defaultValue, obj);
+            };
+            
             const metrics = [
-                { title: '일일 활성 사용자', value: data.userMetrics.dau, unit: '명', color: '#ff6b6b' },
-                { title: '월간 활성 사용자', value: data.userMetrics.mau, unit: '명', color: '#4ecdc4' },
-                { title: '활성 운동기구', value: data.userMetrics.activeDevices, unit: '대', color: '#45b7d1' },
-                { title: '평균 운동시간', value: data.engagementMetrics.avgExerciseTime, unit: '분', color: '#96ceb4' },
-                { title: '총 운동시간', value: data.engagementMetrics.totalExerciseTime.toLocaleString(), unit: '분', color: '#ffeaa7' },
-                { title: '전력 생산량', value: data.performanceMetrics.powerKwh, unit: 'kWh', color: '#dda0dd' },
-                { title: '포인트 지급', value: data.performanceMetrics.totalPoints.toLocaleString(), unit: 'CP', color: '#85c1e9' },
-                { title: '토큰 지급', value: data.performanceMetrics.totalTokens, unit: 'CRS', color: '#f8c471' }
+                { title: '일일 활성 사용자' + (subtitle ? ` (${subtitle})` : ''), value: safeGet(data, 'userMetrics.dau'), unit: '명', color: '#ff6b6b' },
+                { title: '월간 활성 사용자', value: safeGet(data, 'userMetrics.mau'), unit: '명', color: '#4ecdc4' },
+                { title: '활성 운동기구', value: safeGet(data, 'userMetrics.activeDevices'), unit: '대', color: '#45b7d1' },
+                { title: '평균 운동시간', value: safeGet(data, 'engagementMetrics.avgExerciseTime'), unit: '분', color: '#96ceb4' },
+                { title: '총 운동시간', value: safeGet(data, 'engagementMetrics.totalExerciseTime', 0).toLocaleString(), unit: '분', color: '#ffeaa7' },
+                { title: '전력 생산량', value: safeGet(data, 'performanceMetrics.powerKwh'), unit: 'kWh', color: '#dda0dd' },
+                { title: '포인트 지급', value: safeGet(data, 'performanceMetrics.totalPoints', 0).toLocaleString(), unit: 'CP', color: '#85c1e9' },
+                { title: '토큰 지급', value: safeGet(data, 'performanceMetrics.totalTokens'), unit: 'CRS', color: '#f8c471' }
             ];
 
             const container = document.getElementById('metricsOverview');
@@ -458,19 +543,26 @@
         function createSingleMonthCharts(data) {
             console.log('단일 월 차트 생성 시작');
             
+            const safeGet = (obj, path, defaultValue = 0) => {
+                return path.split('.').reduce((o, p) => (o && o[p] !== undefined) ? o[p] : defaultValue, obj);
+            };
+            
             try {
-                // 사용자 활동 차트
+                // 사용자 활동 차트 (도넛 차트)
                 const userCanvas = document.getElementById('userChart');
                 if (userCanvas) {
                     const userCtx = userCanvas.getContext('2d');
+                    const dauValue = safeGet(data, 'userMetrics.dau');
+                    const mauValue = safeGet(data, 'userMetrics.mau');
+                    
                     charts.userChart = new Chart(userCtx, {
                         type: 'doughnut',
                         data: {
-                            labels: ['DAU', 'MAU'],
+                            labels: ['일일 활성 사용자 (DAU)', '월간 활성 사용자 (MAU)'],
                             datasets: [{
-                                data: [data.userMetrics.dau, data.userMetrics.mau],
+                                data: [dauValue, mauValue],
                                 backgroundColor: ['#ff6b6b', '#4ecdc4'],
-                                borderWidth: 2,
+                                borderWidth: 3,
                                 borderColor: '#fff'
                             }]
                         },
@@ -478,38 +570,56 @@
                             responsive: true,
                             maintainAspectRatio: false,
                             plugins: {
-                                legend: { position: 'bottom' }
+                                legend: { position: 'bottom' },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return context.label + ': ' + context.parsed + '명';
+                                        }
+                                    }
+                                }
                             }
                         }
                     });
                 }
 
-                // 운동시간 차트
+                // 운동 지표 차트
                 const exerciseCanvas = document.getElementById('exerciseChart');
                 if (exerciseCanvas) {
                     const exerciseCtx = exerciseCanvas.getContext('2d');
+                    const avgTime = safeGet(data, 'engagementMetrics.avgExerciseTime');
+                    const totalTimeHours = Math.round(safeGet(data, 'engagementMetrics.totalExerciseTime') / 60);
+                    const activeDevices = safeGet(data, 'userMetrics.activeDevices');
+                    
                     charts.exerciseChart = new Chart(exerciseCtx, {
                         type: 'bar',
                         data: {
-                            labels: ['평균 운동시간', '총 운동시간(시간)'],
+                            labels: ['평균 운동시간 (분)', '총 운동시간 (시간)', '활성 기구 (대)'],
                             datasets: [{
-                                data: [
-                                    data.engagementMetrics.avgExerciseTime,
-                                    Math.round(data.engagementMetrics.totalExerciseTime / 60)
-                                ],
-                                backgroundColor: ['#96ceb4', '#ffeaa7'],
-                                borderColor: ['#8bc34a', '#f39c12'],
+                                data: [avgTime, totalTimeHours, activeDevices],
+                                backgroundColor: ['#96ceb4', '#ffeaa7', '#45b7d1'],
+                                borderColor: ['#8bc34a', '#f39c12', '#2196f3'],
                                 borderWidth: 2
                             }]
                         },
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: { legend: { display: false } },
+                            plugins: { 
+                                legend: { display: false },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const labels = ['분', '시간', '대'];
+                                            return context.parsed.y + labels[context.dataIndex];
+                                        }
+                                    }
+                                }
+                            },
                             scales: {
                                 y: {
                                     beginAtZero: true,
-                                    title: { display: true, text: '시간' }
+                                    title: { display: true, text: '수량' }
                                 }
                             }
                         }
@@ -520,44 +630,57 @@
                 const powerCanvas = document.getElementById('powerChart');
                 if (powerCanvas) {
                     const powerCtx = powerCanvas.getContext('2d');
+                    const powerWh = safeGet(data, 'performanceMetrics.powerWh');
+                    const powerKwh = safeGet(data, 'performanceMetrics.powerKwh');
+                    
                     charts.powerChart = new Chart(powerCtx, {
                         type: 'bar',
                         data: {
-                            labels: ['전력 생산량'],
+                            labels: ['전력 (Wh)', '전력 (kWh)'],
                             datasets: [{
-                                data: [data.performanceMetrics.powerKwh],
-                                backgroundColor: '#dda0dd',
-                                borderColor: '#ba68c8',
+                                data: [powerWh, powerKwh],
+                                backgroundColor: ['#dda0dd', '#ba68c8'],
+                                borderColor: ['#9c27b0', '#8e24aa'],
                                 borderWidth: 2
                             }]
                         },
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: { legend: { display: false } },
+                            plugins: { 
+                                legend: { display: false },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const units = ['Wh', 'kWh'];
+                                            return context.parsed.y + units[context.dataIndex];
+                                        }
+                                    }
+                                }
+                            },
                             scales: {
                                 y: {
                                     beginAtZero: true,
-                                    title: { display: true, text: 'kWh' }
+                                    title: { display: true, text: '전력량' }
                                 }
                             }
                         }
                     });
                 }
 
-                // 보상 추이 차트
-                const rewardTrendCanvas = document.getElementById('rewardTrendChart');
-                if (rewardTrendCanvas) {
-                    const rewardTrendCtx = rewardTrendCanvas.getContext('2d');
-                    charts.rewardTrendChart = new Chart(rewardTrendCtx, {
+                // 보상 현황 차트
+                const rewardCanvas = document.getElementById('rewardChart');
+                if (rewardCanvas) {
+                    const rewardCtx = rewardCanvas.getContext('2d');
+                    const totalPoints = safeGet(data, 'performanceMetrics.totalPoints');
+                    const totalTokens = safeGet(data, 'performanceMetrics.totalTokens');
+                    
+                    charts.rewardChart = new Chart(rewardCtx, {
                         type: 'bar',
                         data: {
-                            labels: ['포인트', '토큰'],
+                            labels: ['포인트 (CP)', '토큰 (CRS)'],
                             datasets: [{
-                                data: [
-                                    data.performanceMetrics.totalPoints,
-                                    data.performanceMetrics.totalTokens
-                                ],
+                                data: [totalPoints, totalTokens],
                                 backgroundColor: ['#85c1e9', '#f8c471'],
                                 borderColor: ['#3498db', '#f39c12'],
                                 borderWidth: 2
@@ -566,7 +689,17 @@
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: { legend: { display: false } },
+                            plugins: { 
+                                legend: { display: false },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const units = ['CP', 'CRS'];
+                                            return context.parsed.y.toLocaleString() + units[context.dataIndex];
+                                        }
+                                    }
+                                }
+                            },
                             scales: {
                                 y: {
                                     beginAtZero: true,
@@ -578,19 +711,19 @@
                 }
 
                 // 보상 선호도 차트
-                const rewardCanvas = document.getElementById('rewardChart');
-                if (rewardCanvas) {
-                    const rewardCtx = rewardCanvas.getContext('2d');
-                    charts.rewardChart = new Chart(rewardCtx, {
+                const preferenceCanvas = document.getElementById('preferenceChart');
+                if (preferenceCanvas) {
+                    const preferenceCtx = preferenceCanvas.getContext('2d');
+                    const pointsOnly = safeGet(data, 'userMetrics.pointsOnly');
+                    const tokensOnly = safeGet(data, 'userMetrics.tokensOnly');
+                    const both = safeGet(data, 'userMetrics.both');
+                    
+                    charts.preferenceChart = new Chart(preferenceCtx, {
                         type: 'pie',
                         data: {
                             labels: ['포인트만 선택', '토큰만 선택', '포인트&토큰 선택'],
                             datasets: [{
-                                data: [
-                                    data.userMetrics.pointsOnly,
-                                    data.userMetrics.tokensOnly,
-                                    data.userMetrics.both
-                                ],
+                                data: [pointsOnly, tokensOnly, both],
                                 backgroundColor: ['#ff6b6b', '#4ecdc4', '#45b7d1'],
                                 borderWidth: 3,
                                 borderColor: '#fff'
@@ -599,7 +732,18 @@
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: { legend: { position: 'bottom' } }
+                            plugins: { 
+                                legend: { position: 'bottom' },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = total > 0 ? Math.round((context.parsed * 100) / total) : 0;
+                                            return context.label + ': ' + context.parsed + '명 (' + percentage + '%)';
+                                        }
+                                    }
+                                }
+                            }
                         }
                     });
                 }
@@ -616,6 +760,10 @@
             console.log('트렌드 차트 생성 시작');
             const labels = dataArray.map(d => `${d.year}년 ${d.month}월`);
             
+            const safeGet = (obj, path, defaultValue = 0) => {
+                return path.split('.').reduce((o, p) => (o && o[p] !== undefined) ? o[p] : defaultValue, obj);
+            };
+            
             try {
                 // 사용자 활동 트렌드
                 const userCanvas = document.getElementById('userChart');
@@ -627,14 +775,14 @@
                             labels: labels,
                             datasets: [{
                                 label: 'DAU',
-                                data: dataArray.map(d => d.userMetrics.dau),
+                                data: dataArray.map(d => safeGet(d, 'userMetrics.dau')),
                                 borderColor: '#ff6b6b',
                                 backgroundColor: 'rgba(255, 107, 107, 0.1)',
                                 fill: true,
                                 tension: 0.4
                             }, {
                                 label: 'MAU',
-                                data: dataArray.map(d => d.userMetrics.mau),
+                                data: dataArray.map(d => safeGet(d, 'userMetrics.mau')),
                                 borderColor: '#4ecdc4',
                                 backgroundColor: 'rgba(78, 205, 196, 0.1)',
                                 fill: true,
@@ -655,7 +803,173 @@
                     });
                 }
 
-                // 다른 차트들도 유사하게 생성...
+                // 운동 지표 트렌드
+                const exerciseCanvas = document.getElementById('exerciseChart');
+                if (exerciseCanvas) {
+                    const exerciseCtx = exerciseCanvas.getContext('2d');
+                    charts.exerciseChart = new Chart(exerciseCtx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: '평균 운동시간 (분)',
+                                data: dataArray.map(d => safeGet(d, 'engagementMetrics.avgExerciseTime')),
+                                borderColor: '#96ceb4',
+                                backgroundColor: 'rgba(150, 206, 180, 0.1)',
+                                fill: true,
+                                tension: 0.4,
+                                yAxisID: 'y'
+                            }, {
+                                label: '활성 기구 (대)',
+                                data: dataArray.map(d => safeGet(d, 'userMetrics.activeDevices')),
+                                borderColor: '#45b7d1',
+                                backgroundColor: 'rgba(69, 183, 209, 0.1)',
+                                fill: true,
+                                tension: 0.4,
+                                yAxisID: 'y1'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { position: 'top' } },
+                            scales: {
+                                y: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'left',
+                                    title: { display: true, text: '운동시간 (분)' }
+                                },
+                                y1: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'right',
+                                    title: { display: true, text: '기구 수 (대)' },
+                                    grid: { drawOnChartArea: false }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // 전력 생산 트렌드
+                const powerCanvas = document.getElementById('powerChart');
+                if (powerCanvas) {
+                    const powerCtx = powerCanvas.getContext('2d');
+                    charts.powerChart = new Chart(powerCtx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: '전력 생산량 (kWh)',
+                                data: dataArray.map(d => safeGet(d, 'performanceMetrics.powerKwh')),
+                                borderColor: '#dda0dd',
+                                backgroundColor: 'rgba(221, 160, 221, 0.1)',
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { position: 'top' } },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: { display: true, text: '전력량 (kWh)' }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // 보상 트렌드
+                const rewardCanvas = document.getElementById('rewardChart');
+                if (rewardCanvas) {
+                    const rewardCtx = rewardCanvas.getContext('2d');
+                    charts.rewardChart = new Chart(rewardCtx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: '포인트 (CP)',
+                                data: dataArray.map(d => safeGet(d, 'performanceMetrics.totalPoints')),
+                                borderColor: '#85c1e9',
+                                backgroundColor: 'rgba(133, 193, 233, 0.1)',
+                                fill: true,
+                                tension: 0.4,
+                                yAxisID: 'y'
+                            }, {
+                                label: '토큰 (CRS)',
+                                data: dataArray.map(d => safeGet(d, 'performanceMetrics.totalTokens')),
+                                borderColor: '#f8c471',
+                                backgroundColor: 'rgba(248, 196, 113, 0.1)',
+                                fill: true,
+                                tension: 0.4,
+                                yAxisID: 'y1'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { position: 'top' } },
+                            scales: {
+                                y: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'left',
+                                    title: { display: true, text: '포인트 (CP)' }
+                                },
+                                y1: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'right',
+                                    title: { display: true, text: '토큰 (CRS)' },
+                                    grid: { drawOnChartArea: false }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // 보상 선호도 트렌드 (적층 바 차트)
+                const preferenceCanvas = document.getElementById('preferenceChart');
+                if (preferenceCanvas) {
+                    const preferenceCtx = preferenceCanvas.getContext('2d');
+                    charts.preferenceChart = new Chart(preferenceCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: '포인트만',
+                                data: dataArray.map(d => safeGet(d, 'userMetrics.pointsOnly')),
+                                backgroundColor: '#ff6b6b'
+                            }, {
+                                label: '토큰만',
+                                data: dataArray.map(d => safeGet(d, 'userMetrics.tokensOnly')),
+                                backgroundColor: '#4ecdc4'
+                            }, {
+                                label: '포인트&토큰',
+                                data: dataArray.map(d => safeGet(d, 'userMetrics.both')),
+                                backgroundColor: '#45b7d1'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { position: 'bottom' } },
+                            scales: {
+                                x: { stacked: true },
+                                y: {
+                                    stacked: true,
+                                    beginAtZero: true,
+                                    title: { display: true, text: '사용자 수 (명)' }
+                                }
+                            }
+                        }
+                    });
+                }
+
                 console.log('트렌드 차트 생성 완료');
             } catch (error) {
                 console.error('트렌드 차트 생성 오류:', error);
@@ -667,7 +981,11 @@
         function destroyCharts() {
             Object.values(charts).forEach(chart => {
                 if (chart && typeof chart.destroy === 'function') {
-                    chart.destroy();
+                    try {
+                        chart.destroy();
+                    } catch (error) {
+                        console.warn('차트 제거 중 오류:', error);
+                    }
                 }
             });
             charts = {};
@@ -692,7 +1010,7 @@
             console.error('에러:', message);
             const errorDiv = document.createElement('div');
             errorDiv.className = 'error-message';
-            errorDiv.innerHTML = `<strong>오류:</strong> ${message}`;
+            errorDiv.innerHTML = `<strong>❌ 오류:</strong> ${message}`;
             
             const container = document.querySelector('.container');
             container.insertBefore(errorDiv, container.firstChild);
@@ -704,12 +1022,33 @@
             }, 8000);
         }
 
+        // 경고 메시지 표시
+        function showWarning(message) {
+            console.warn('경고:', message);
+            const warningDiv = document.createElement('div');
+            warningDiv.className = 'warning-message';
+            warningDiv.innerHTML = `<strong>⚠️ 경고:</strong> ${message}`;
+            
+            const container = document.querySelector('.container');
+            container.insertBefore(warningDiv, container.firstChild);
+            
+            setTimeout(() => {
+                if (warningDiv.parentNode) {
+                    warningDiv.remove();
+                }
+            }, 6000);
+        }
+
         // 새 파일 업로드 함수
         function resetDashboard() {
             destroyCharts();
             document.getElementById('uploadSection').style.display = 'block';
             document.getElementById('dashboardContent').style.display = 'none';
             document.getElementById('jsonFileInput').value = '';
+            currentData = null;
+            
+            // 기존 에러/경고 메시지 제거
+            document.querySelectorAll('.error-message, .warning-message').forEach(el => el.remove());
         }
     </script>
 </body>
