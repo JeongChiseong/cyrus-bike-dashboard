@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사이러스 바이크 관리 시스템</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        input, select {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+            border: none;
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛠️ 사이러스 바이크 관리 시스템</h1>
+        <p>데이터 입력 테스트 페이지</p>
+        
+        <div style="margin: 20px 0;">
+            <h3>📊 월별 데이터 입력</h3>
+            <form id="dataForm">
+                <div>
+                    <label>년도:</label>
+                    <select id="year">
+                        <option value="2024">2024년</option>
+                        <option value="2025">2025년</option>
+                    </select>
+                </div>
+                <div>
+                    <label>월:</label>
+                    <select id="month">
+                        <option value="1">1월</option>
+                        <option value="2">2월</option>
+                        <option value="3">3월</option>
+                        <option value="7">7월</option>
+                    </select>
+                </div>
+                <div>
+                    <label>MAU:</label>
+                    <input type="number" id="mau" placeholder="예: 4500">
+                </div>
+                <div>
+                    <label>전기생산량(kWh):</label>
+                    <input type="number" id="energy" placeholder="예: 250">
+                </div>
+                <button type="submit" class="btn">💾 저장</button>
+            </form>
+        </div>
+        
+        <div id="result"></div>
+        
+        <div style="margin-top: 30px;">
+            <h3>📋 저장된 데이터</h3>
+            <div id="dataList"></div>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <a href="dashboard.html" class="btn">📊 대시보드 보기</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('dataForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const year = document.getElementById('year').value;
+            const month = document.getElementById('month').value;
+            const mau = document.getElementById('mau').value;
+            const energy = document.getElementById('energy').value;
+            
+            if (!mau || !energy) {
+                alert('모든 값을 입력해주세요!');
+                return;
+            }
+            
+            const key = `cyrus_data_${year}_${month.padStart(2, '0')}`;
+            const data = {
+                year: parseInt(year),
+                month: parseInt(month),
+                mau: parseInt(mau),
+                energy: parseFloat(energy),
+                lastUpdated: new Date().toISOString()
+            };
+            
+            localStorage.setItem(key, JSON.stringify(data));
+            
+            document.getElementById('result').innerHTML = 
+                `<div style="background: rgba(46, 204, 113, 0.2); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                    ✅ ${year}년 ${month}월 데이터가 저장되었습니다!
+                </div>`;
+            
+            loadDataList();
+            document.getElementById('dataForm').reset();
+        });
+        
+        function loadDataList() {
+            const dataList = document.getElementById('dataList');
+            const allData = [];
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('cyrus_data_')) {
+                    const data = JSON.parse(localStorage.getItem(key));
+                    allData.push(data);
+                }
+            }
+            
+            if (allData.length === 0) {
+                dataList.innerHTML = '<p>저장된 데이터가 없습니다.</p>';
+                return;
+            }
+            
+            allData.sort((a, b) => {
+                if (a.year !== b.year) return b.year - a.year;
+                return b.month - a.month;
+            });
+            
+            dataList.innerHTML = allData.map(data => 
+                `<div style="background: rgba(255,255,255,0.1); padding: 10px; margin: 5px 0; border-radius: 5px;">
+                    ${data.year}년 ${data.month}월 - MAU: ${data.mau}, 전기: ${data.energy}kWh
+                </div>`
+            ).join('');
+        }
+        
+        window.addEventListener('load', loadDataList);
+    </script>
+</body>
+</html>
