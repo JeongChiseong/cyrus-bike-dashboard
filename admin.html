@@ -13,7 +13,7 @@
             min-height: 100vh;
         }
         .container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
             background: rgba(255,255,255,0.1);
             padding: 30px;
@@ -27,62 +27,247 @@
             border: none;
             border-radius: 10px;
             cursor: pointer;
-            margin: 10px;
+            margin: 10px 5px;
+            font-weight: 600;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .form-section {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
         }
         input, select {
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            font-size: 1rem;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+        input::placeholder {
+            color: #666;
+        }
+        select option {
+            background: white;
+            color: #333;
+        }
+        .category-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+            margin: 20px 0 15px 0;
             padding: 10px;
-            margin: 5px;
-            border-radius: 5px;
-            border: none;
-            width: 200px;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            border-radius: 10px;
+            text-align: center;
+        }
+        .result {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        .result.success {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+            border: 1px solid rgba(46, 204, 113, 0.3);
+        }
+        .data-list {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+        .data-item {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn-danger {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+        }
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            color: white;
+        }
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 5px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🛠️ 사이러스 바이크 관리 시스템</h1>
-        <p>데이터 입력 테스트 페이지</p>
+        <p>전문 지표 데이터 입력 시스템</p>
         
-        <div style="margin: 20px 0;">
-            <h3>📊 월별 데이터 입력</h3>
+        <div class="form-section">
+            <h3>📊 월별 전문 지표 입력</h3>
+            
             <form id="dataForm">
-                <div>
-                    <label>년도:</label>
-                    <select id="year">
-                        <option value="2024">2024년</option>
-                        <option value="2025">2025년</option>
-                    </select>
+                <!-- 기본 정보 -->
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>년도</label>
+                        <select id="year">
+                            <option value="2024">2024년</option>
+                            <option value="2025">2025년</option>
+                            <option value="2026">2026년</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>월</label>
+                        <select id="month">
+                            <option value="1">1월</option>
+                            <option value="2">2월</option>
+                            <option value="3">3월</option>
+                            <option value="4">4월</option>
+                            <option value="5">5월</option>
+                            <option value="6">6월</option>
+                            <option value="7">7월</option>
+                            <option value="8">8월</option>
+                            <option value="9">9월</option>
+                            <option value="10">10월</option>
+                            <option value="11">11월</option>
+                            <option value="12">12월</option>
+                        </select>
+                    </div>
                 </div>
-                <div>
-                    <label>월:</label>
-                    <select id="month">
-                        <option value="1">1월</option>
-                        <option value="2">2월</option>
-                        <option value="3">3월</option>
-                        <option value="7">7월</option>
-                    </select>
+
+                <!-- 1. 활성 사용자 지표 -->
+                <div class="category-title">👥 1. 활성 사용자 지표</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>일일 활성 사용자 DAU (명) 평균</label>
+                        <input type="number" id="dau" placeholder="예: 1500" required>
+                    </div>
+                    <div class="form-group">
+                        <label>월간 활성 사용자 MAU (명)</label>
+                        <input type="number" id="mau" placeholder="예: 4500" required>
+                    </div>
+                    <div class="form-group">
+                        <label>포인트만 선택 (명)</label>
+                        <input type="number" id="pointOnly" placeholder="예: 2800" required>
+                    </div>
+                    <div class="form-group">
+                        <label>토큰만 선택 (명)</label>
+                        <input type="number" id="tokenOnly" placeholder="예: 1500" required>
+                    </div>
+                    <div class="form-group">
+                        <label>중복 선택 (포인트&토큰) (명)</label>
+                        <input type="number" id="both" placeholder="예: 200" required>
+                    </div>
+                    <div class="form-group">
+                        <label>기타 누락자 (명)</label>
+                        <input type="number" id="others" placeholder="예: 0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>평균 앱 체류 시간 (분)</label>
+                        <input type="number" id="avgStayTime" placeholder="예: 45" required>
+                    </div>
+                    <div class="form-group">
+                        <label>시리얼넘버 기준 활성 운동기구 수 (대)</label>
+                        <input type="number" id="activeBikes" placeholder="예: 127" required>
+                    </div>
                 </div>
-                <div>
-                    <label>MAU:</label>
-                    <input type="number" id="mau" placeholder="예: 4500">
+
+                <!-- 2. 월간 사용자 참여 지표 -->
+                <div class="category-title">🚴‍♂️ 2. 월간 사용자 참여 지표</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>실제 사용중인 운동기구 수 (대)</label>
+                        <input type="number" id="realActiveBikes" placeholder="예: 120" required>
+                    </div>
+                    <div class="form-group">
+                        <label>평균 운동 시간 (분)</label>
+                        <input type="number" id="avgExercise" placeholder="예: 58" required>
+                    </div>
+                    <div class="form-group">
+                        <label>총 운동 시간 (분)</label>
+                        <input type="number" id="totalExercise" placeholder="예: 107400" required>
+                    </div>
                 </div>
-                <div>
-                    <label>전기생산량(kWh):</label>
-                    <input type="number" id="energy" placeholder="예: 250">
+
+                <!-- 3. 기술 성과 지표 -->
+                <div class="category-title">⚡ 3. 기술 성과 지표</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>전기 생산량 (Wh)</label>
+                        <input type="number" id="energyWh" placeholder="예: 252000" required>
+                    </div>
+                    <div class="form-group">
+                        <label>전기 생산량 (kWh)</label>
+                        <input type="number" step="0.1" id="energykWh" placeholder="예: 252" required>
+                    </div>
+                    <div class="form-group">
+                        <label>포인트 보상량 (CP)</label>
+                        <input type="number" id="pointReward" placeholder="예: 97200" required>
+                    </div>
+                    <div class="form-group">
+                        <label>토큰 보상량 (CRS)</label>
+                        <input type="number" id="tokenReward" placeholder="예: 7560" required>
+                    </div>
                 </div>
-                <button type="submit" class="btn">💾 저장</button>
+
+                <button type="submit" class="btn">💾 데이터 저장</button>
             </form>
         </div>
         
         <div id="result"></div>
         
-        <div style="margin-top: 30px;">
-            <h3>📋 저장된 데이터</h3>
+        <!-- 통계 요약 -->
+        <div class="data-list">
+            <h3>📈 저장된 데이터 통계</h3>
+            <div class="stats-summary" id="statsSummary">
+                <!-- 통계 카드들이 동적으로 생성 -->
+            </div>
+        </div>
+        
+        <!-- 저장된 데이터 목록 -->
+        <div class="data-list">
+            <h3>📋 저장된 데이터 목록</h3>
             <div id="dataList"></div>
         </div>
         
-        <div style="margin-top: 20px;">
+        <div style="text-align: center; margin-top: 30px;">
             <a href="dashboard.html" class="btn">📊 대시보드 보기</a>
+            <button class="btn btn-danger" onclick="clearAllData()">🗑️ 모든 데이터 삭제</button>
         </div>
     </div>
 
@@ -92,64 +277,190 @@
             
             const year = document.getElementById('year').value;
             const month = document.getElementById('month').value;
-            const mau = document.getElementById('mau').value;
-            const energy = document.getElementById('energy').value;
             
-            if (!mau || !energy) {
-                alert('모든 값을 입력해주세요!');
-                return;
-            }
-            
-            const key = `cyrus_data_${year}_${month.padStart(2, '0')}`;
             const data = {
                 year: parseInt(year),
                 month: parseInt(month),
-                mau: parseInt(mau),
-                energy: parseFloat(energy),
+                
+                // 1. 활성 사용자 지표
+                dau: parseInt(document.getElementById('dau').value) || 0,
+                mau: parseInt(document.getElementById('mau').value) || 0,
+                pointOnly: parseInt(document.getElementById('pointOnly').value) || 0,
+                tokenOnly: parseInt(document.getElementById('tokenOnly').value) || 0,
+                both: parseInt(document.getElementById('both').value) || 0,
+                others: parseInt(document.getElementById('others').value) || 0,
+                avgStayTime: parseInt(document.getElementById('avgStayTime').value) || 0,
+                activeBikes: parseInt(document.getElementById('activeBikes').value) || 0,
+                
+                // 2. 월간 사용자 참여 지표
+                realActiveBikes: parseInt(document.getElementById('realActiveBikes').value) || 0,
+                avgExercise: parseInt(document.getElementById('avgExercise').value) || 0,
+                totalExercise: parseInt(document.getElementById('totalExercise').value) || 0,
+                
+                // 3. 기술 성과 지표
+                energyWh: parseInt(document.getElementById('energyWh').value) || 0,
+                energykWh: parseFloat(document.getElementById('energykWh').value) || 0,
+                pointReward: parseInt(document.getElementById('pointReward').value) || 0,
+                tokenReward: parseInt(document.getElementById('tokenReward').value) || 0,
+                
                 lastUpdated: new Date().toISOString()
             };
             
+            const key = `cyrus_data_${year}_${month.padStart(2, '0')}`;
             localStorage.setItem(key, JSON.stringify(data));
             
             document.getElementById('result').innerHTML = 
-                `<div style="background: rgba(46, 204, 113, 0.2); padding: 15px; border-radius: 10px; margin: 10px 0;">
-                    ✅ ${year}년 ${month}월 데이터가 저장되었습니다!
+                `<div class="result success">
+                    ✅ ${year}년 ${month}월 데이터가 성공적으로 저장되었습니다!<br>
+                    📊 MAU: ${data.mau.toLocaleString()}명, 전기생산량: ${data.energykWh}kWh
                 </div>`;
             
             loadDataList();
             document.getElementById('dataForm').reset();
+            
+            setTimeout(() => {
+                document.getElementById('result').innerHTML = '';
+            }, 5000);
         });
         
         function loadDataList() {
             const dataList = document.getElementById('dataList');
+            const statsSummary = document.getElementById('statsSummary');
             const allData = [];
             
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
                 if (key.startsWith('cyrus_data_')) {
                     const data = JSON.parse(localStorage.getItem(key));
+                    data.key = key;
                     allData.push(data);
                 }
             }
             
             if (allData.length === 0) {
-                dataList.innerHTML = '<p>저장된 데이터가 없습니다.</p>';
+                dataList.innerHTML = '<p style="opacity: 0.7; text-align: center;">저장된 데이터가 없습니다.</p>';
+                statsSummary.innerHTML = '<p style="opacity: 0.7; text-align: center;">데이터가 없습니다.</p>';
                 return;
             }
             
+            // 통계 요약 계산
+            const totalMAU = allData.reduce((sum, data) => sum + (data.mau || 0), 0);
+            const totalEnergyKWh = allData.reduce((sum, data) => sum + (data.energykWh || 0), 0);
+            const totalCP = allData.reduce((sum, data) => sum + (data.pointReward || 0), 0);
+            const totalCRS = allData.reduce((sum, data) => sum + (data.tokenReward || 0), 0);
+            
+            statsSummary.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${totalMAU.toLocaleString()}</div>
+                    <div>총 MAU</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${Math.round(totalEnergyKWh).toLocaleString()}</div>
+                    <div>총 전기생산량 (kWh)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${totalCP.toLocaleString()}</div>
+                    <div>총 포인트 지급 (CP)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${totalCRS.toLocaleString()}</div>
+                    <div>총 토큰 지급 (CRS)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${allData.length}</div>
+                    <div>데이터 개수 (개월)</div>
+                </div>
+            `;
+            
+            // 데이터 목록 정렬
             allData.sort((a, b) => {
                 if (a.year !== b.year) return b.year - a.year;
                 return b.month - a.month;
             });
             
             dataList.innerHTML = allData.map(data => 
-                `<div style="background: rgba(255,255,255,0.1); padding: 10px; margin: 5px 0; border-radius: 5px;">
-                    ${data.year}년 ${data.month}월 - MAU: ${data.mau}, 전기: ${data.energy}kWh
+                `<div class="data-item">
+                    <div>
+                        <strong>${data.year}년 ${data.month}월</strong><br>
+                        <small>MAU: ${data.mau?.toLocaleString() || 0}, 전기: ${data.energykWh || 0}kWh, CP: ${data.pointReward?.toLocaleString() || 0}, CRS: ${data.tokenReward?.toLocaleString() || 0}</small>
+                    </div>
+                    <div>
+                        <button class="btn" onclick="editData('${data.key}')">✏️ 수정</button>
+                        <button class="btn btn-danger" onclick="deleteData('${data.key}')">🗑️ 삭제</button>
+                    </div>
                 </div>`
             ).join('');
         }
         
-        window.addEventListener('load', loadDataList);
+        function deleteData(key) {
+            if (confirm('정말 이 데이터를 삭제하시겠습니까?')) {
+                localStorage.removeItem(key);
+                loadDataList();
+                document.getElementById('result').innerHTML = 
+                    '<div class="result success">✅ 데이터가 삭제되었습니다.</div>';
+                setTimeout(() => {
+                    document.getElementById('result').innerHTML = '';
+                }, 3000);
+            }
+        }
+        
+        function editData(key) {
+            const data = JSON.parse(localStorage.getItem(key));
+            
+            // 폼에 기존 데이터 입력
+            document.getElementById('year').value = data.year;
+            document.getElementById('month').value = data.month;
+            document.getElementById('dau').value = data.dau || '';
+            document.getElementById('mau').value = data.mau || '';
+            document.getElementById('pointOnly').value = data.pointOnly || '';
+            document.getElementById('tokenOnly').value = data.tokenOnly || '';
+            document.getElementById('both').value = data.both || '';
+            document.getElementById('others').value = data.others || '';
+            document.getElementById('avgStayTime').value = data.avgStayTime || '';
+            document.getElementById('activeBikes').value = data.activeBikes || '';
+            document.getElementById('realActiveBikes').value = data.realActiveBikes || '';
+            document.getElementById('avgExercise').value = data.avgExercise || '';
+            document.getElementById('totalExercise').value = data.totalExercise || '';
+            document.getElementById('energyWh').value = data.energyWh || '';
+            document.getElementById('energykWh').value = data.energykWh || '';
+            document.getElementById('pointReward').value = data.pointReward || '';
+            document.getElementById('tokenReward').value = data.tokenReward || '';
+            
+            window.scrollTo(0, 0);
+            document.getElementById('result').innerHTML = 
+                `<div class="result success">📝 ${data.year}년 ${data.month}월 데이터를 수정 모드로 불러왔습니다.</div>`;
+        }
+        
+        function clearAllData() {
+            if (confirm('⚠️ 정말 모든 데이터를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다!')) {
+                if (confirm('한 번 더 확인합니다. 모든 데이터가 영구적으로 삭제됩니다!')) {
+                    const keysToDelete = [];
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (key.startsWith('cyrus_data_')) {
+                            keysToDelete.push(key);
+                        }
+                    }
+                    
+                    keysToDelete.forEach(key => localStorage.removeItem(key));
+                    
+                    document.getElementById('result').innerHTML = 
+                        '<div class="result success">✅ 모든 데이터가 삭제되었습니다.</div>';
+                    loadDataList();
+                }
+            }
+        }
+        
+        function setCurrentMonth() {
+            const now = new Date();
+            document.getElementById('year').value = now.getFullYear();
+            document.getElementById('month').value = now.getMonth() + 1;
+        }
+        
+        window.addEventListener('load', () => {
+            setCurrentMonth();
+            loadDataList();
+        });
     </script>
 </body>
 </html>
