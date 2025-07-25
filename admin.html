@@ -155,6 +155,49 @@
             border-radius: 5px;
             margin: 10px 0;
         }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: black;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -302,6 +345,15 @@
             <button class="btn" onclick="exportAllDataToJSON()" style="background: #28a745;">📦 전체 데이터 JSON 내보내기</button>
             <button class="btn" onclick="viewDashboard()">📊 대시보드 보기</button>
             <button class="btn btn-danger" onclick="clearAllData()">🗑️ 모든 데이터 삭제</button>
+        </div>
+    </div>
+
+    <!-- 통계 모달 -->
+    <div id="statsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeStatsModal()">&times;</span>
+            <h2>📈 저장된 데이터 통계</h2>
+            <div id="statsContent"></div>
         </div>
     </div>
 
@@ -574,7 +626,6 @@
                 timestamp: new Date().toISOString()
             };
 
-            // localStorage에 저장 (실제로는 GitHub API나 다른 방식 사용)
             let savedData = JSON.parse(localStorage.getItem('bikeMetrics') || '[]');
             
             // 같은 년월 데이터가 있으면 업데이트, 없으면 추가
@@ -592,144 +643,115 @@
             alert('✅ 데이터가 저장되었습니다!');
         }
 
-        // JSON 파일로 내보내기
-        function exportToJSON() {
-            // 현재 입력된 모든 데이터 수집
-            const exportData = {
-                year: document.getElementById('year').value,
-                month: document.getElementById('month').value,
-                
-                // 활성 사용자 지표
-                userMetrics: {
-                    dau: parseInt(document.getElementById('dau').value) || 0,
-                    mau: parseInt(document.getElementById('mau').value) || 0,
-                    pointsOnly: parseInt(document.getElementById('pointsOnly').value) || 0,
-                    tokensOnly: parseInt(document.getElementById('tokensOnly').value) || 0,
-                    both: parseInt(document.getElementById('both').value) || 0,
-                    appTime: parseInt(document.getElementById('appTime').value) || 0,
-                    activeDevices: parseInt(document.getElementById('activeDevices').value) || 0
-                },
-                
-                // 사용자 참여 지표
-                engagementMetrics: {
-                    usedDevices: parseInt(document.getElementById('usedDevices').value) || 0,
-                    avgExerciseTime: parseInt(document.getElementById('avgExerciseTime').value) || 0,
-                    totalExerciseTime: parseInt(document.getElementById('totalExerciseTime').value) || 0
-                },
-                
-                // 기술 성과 지표
-                performanceMetrics: {
-                    powerWh: parseInt(document.getElementById('powerWh').value) || 0,
-                    powerKwh: parseFloat(document.getElementById('powerKwh').value) || 0,
-                    totalPoints: parseInt(document.getElementById('totalPoints').value) || 0,
-                    totalTokens: parseFloat(document.getElementById('totalTokens').value) || 0
-                },
-                
-                // 메타데이터
-                metadata: {
-                    exportDate: new Date().toISOString(),
-                    dataSource: 'cyrus-bike-admin',
-                    version: '1.0',
-                    rawDataRecords: rawData.length || 0
-                },
-                
-                // 계산된 원시 지표 (백업용)
-                calculatedMetrics: calculatedMetrics
-            };
+        // 저장된 데이터 통계 표시 (누락된 함수 추가)
+        function showStats() {
+            const data = JSON.parse(localStorage.getItem('bikeMetrics') || '[]');
             
-            // 파일명 생성
-            const fileName = `cyrus-bike-${exportData.year}-${exportData.month.padStart(2, '0')}.json`;
-            
-            // JSON 파일 다운로드
-            const jsonStr = JSON.stringify(exportData, null, 2);
-            const blob = new Blob([jsonStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            alert(`✅ ${fileName} 파일이 다운로드되었습니다!\n\n이 파일을 대시보드에 업로드하면 시각화를 볼 수 있습니다.`);
-        }
-
-        // 모든 저장된 데이터를 JSON으로 내보내기
-        function exportAllDataToJSON() {
-            const allData = JSON.parse(localStorage.getItem('bikeMetrics') || '[]');
-            
-            if (allData.length === 0) {
+            if (data.length === 0) {
                 alert('저장된 데이터가 없습니다.');
                 return;
             }
+
+            // 통계 계산
+            const totalMonths = data.length;
+            const totalUsers = data.reduce((sum, item) => sum + parseInt(item.mau || 0), 0);
+            const avgUsers = Math.round(totalUsers / totalMonths);
+            const totalPower = data.reduce((sum, item) => sum + parseFloat(item.powerKwh || 0), 0);
+            const totalPoints = data.reduce((sum, item) => sum + parseInt(item.totalPoints || 0), 0);
+            const totalTokens = data.reduce((sum, item) => sum + parseFloat(item.totalTokens || 0), 0);
+            const totalExerciseTime = data.reduce((sum, item) => sum + parseInt(item.totalExerciseTime || 0), 0);
             
-            const exportData = {
-                totalMonths: allData.length,
-                data: allData.map(item => ({
-                    year: item.year,
-                    month: item.month,
-                    userMetrics: {
-                        dau: parseInt(item.dau) || 0,
-                        mau: parseInt(item.mau) || 0,
-                        pointsOnly: parseInt(item.pointsOnly) || 0,
-                        tokensOnly: parseInt(item.tokensOnly) || 0,
-                        both: parseInt(item.both) || 0,
-                        appTime: parseInt(item.appTime) || 0,
-                        activeDevices: parseInt(item.activeDevices) || 0
-                    },
-                    engagementMetrics: {
-                        usedDevices: parseInt(item.usedDevices) || 0,
-                        avgExerciseTime: parseInt(item.avgExerciseTime) || 0,
-                        totalExerciseTime: parseInt(item.totalExerciseTime) || 0
-                    },
-                    performanceMetrics: {
-                        powerWh: parseInt(item.powerWh) || 0,
-                        powerKwh: parseFloat(item.powerKwh) || 0,
-                        totalPoints: parseInt(item.totalPoints) || 0,
-                        totalTokens: parseFloat(item.totalTokens) || 0
-                    }
-                })),
-                metadata: {
-                    exportDate: new Date().toISOString(),
-                    dataSource: 'cyrus-bike-admin-all',
-                    version: '1.0'
-                }
-            };
+            // 최신 데이터
+            const latestData = data[data.length - 1];
+            const oldestData = data[0];
             
-            const fileName = `cyrus-bike-all-data.json`;
-            const jsonStr = JSON.stringify(exportData, null, 2);
-            const blob = new Blob([jsonStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            alert(`✅ 전체 데이터 ${fileName} 파일이 다운로드되었습니다!`);
+            // 성장률 계산
+            const userGrowth = oldestData.mau > 0 ? 
+                Math.round(((latestData.mau - oldestData.mau) / oldestData.mau) * 100) : 0;
+            const powerGrowth = oldestData.powerKwh > 0 ? 
+                Math.round(((latestData.powerKwh - oldestData.powerKwh) / oldestData.powerKwh) * 100) : 0;
+
+            // 통계 콘텐츠 생성
+            const statsContent = `
+                <div class="stats-grid">
+                    <div class="stats-card">
+                        <div class="metric-value">${totalMonths}</div>
+                        <div class="metric-label">총 저장된 월수</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="metric-value">${avgUsers}</div>
+                        <div class="metric-label">평균 MAU</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="metric-value">${totalPower.toFixed(2)}</div>
+                        <div class="metric-label">총 전력생산 (kWh)</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="metric-value">${totalPoints.toLocaleString()}</div>
+                        <div class="metric-label">총 포인트 지급</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="metric-value">${totalTokens.toFixed(1)}</div>
+                        <div class="metric-label">총 토큰 지급</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="metric-value">${Math.round(totalExerciseTime / 60).toLocaleString()}</div>
+                        <div class="metric-label">총 운동시간 (시간)</div>
+                    </div>
+                </div>
+                
+                <h3>📈 성장률 분석</h3>
+                <div class="stats-grid">
+                    <div class="stats-card" style="background: ${userGrowth >= 0 ? 'linear-gradient(135deg, #4ecdc4, #44a08d)' : 'linear-gradient(135deg, #ff6b6b, #ee5a24)'};">
+                        <div class="metric-value">${userGrowth > 0 ? '+' : ''}${userGrowth}%</div>
+                        <div class="metric-label">사용자 증가율</div>
+                    </div>
+                    <div class="stats-card" style="background: ${powerGrowth >= 0 ? 'linear-gradient(135deg, #4ecdc4, #44a08d)' : 'linear-gradient(135deg, #ff6b6b, #ee5a24)'};">
+                        <div class="metric-value">${powerGrowth > 0 ? '+' : ''}${powerGrowth}%</div>
+                        <div class="metric-label">전력생산 증가율</div>
+                    </div>
+                </div>
+                
+                <h3>📅 기간별 데이터</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>년월</th>
+                            <th>MAU</th>
+                            <th>DAU</th>
+                            <th>전력(kWh)</th>
+                            <th>포인트</th>
+                            <th>토큰</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.map(item => `
+                            <tr>
+                                <td>${item.year}년 ${item.month}월</td>
+                                <td>${item.mau || 0}명</td>
+                                <td>${item.dau || 0}명</td>
+                                <td>${item.powerKwh || 0}kWh</td>
+                                <td>${parseInt(item.totalPoints || 0).toLocaleString()}CP</td>
+                                <td>${parseFloat(item.totalTokens || 0).toFixed(1)}CRS</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            document.getElementById('statsContent').innerHTML = statsContent;
+            document.getElementById('statsModal').style.display = 'block';
         }
 
-        function showDataList() {
-            const data = JSON.parse(localStorage.getItem('bikeMetrics') || '[]');
-            console.log('저장된 데이터:', data);
-            alert('저장된 데이터를 콘솔에서 확인하세요 (F12)');
+        // 통계 모달 닫기
+        function closeStatsModal() {
+            document.getElementById('statsModal').style.display = 'none';
         }
 
-        function viewDashboard() {
-            window.open('./index.html', '_blank');
-        }
-
-        function clearAllData() {
-            if (confirm('정말로 모든 데이터를 삭제하시겠습니까?')) {
-                localStorage.removeItem('bikeMetrics');
-                alert('모든 데이터가 삭제되었습니다.');
+        // 모달 외부 클릭시 닫기
+        window.onclick = function(event) {
+            const modal = document.getElementById('statsModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
             }
         }
-    </script>
-</body>
-</html>
