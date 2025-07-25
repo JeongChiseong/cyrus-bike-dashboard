@@ -1,4 +1,8 @@
-<!DOCTYPE html>
+// 기타 함수들 (기존 기능 유지)
+        function showStats() {
+            const data = JSON.parse(localStorage.getItem('bikeMetrics') || '[]');
+            alert(`저장된 데이터: ${data.length}개월`);
+        }<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -291,6 +295,7 @@
 
             <button class="btn" onclick="saveData()">💾 데이터 저장</button>
             <button class="btn" onclick="fillFromCalculated()">🔄 계산된 값으로 자동 입력</button>
+            <button class="btn" onclick="exportToJSON()" style="background: #17a2b8;">📤 JSON 파일로 내보내기</button>
         </div>
 
         <!-- 4. 저장된 데이터 관리 -->
@@ -298,6 +303,7 @@
             <h2>📊 저장된 데이터 관리</h2>
             <button class="btn" onclick="showStats()">📈 저장된 데이터 통계</button>
             <button class="btn" onclick="showDataList()">📋 저장된 데이터 목록</button>
+            <button class="btn" onclick="exportAllDataToJSON()" style="background: #28a745;">📦 전체 데이터 JSON 내보내기</button>
             <button class="btn" onclick="viewDashboard()">📊 대시보드 보기</button>
             <button class="btn btn-danger" onclick="clearAllData()">🗑️ 모든 데이터 삭제</button>
         </div>
@@ -590,10 +596,126 @@
             alert('✅ 데이터가 저장되었습니다!');
         }
 
-        // 기타 함수들 (기존 기능 유지)
-        function showStats() {
-            const data = JSON.parse(localStorage.getItem('bikeMetrics') || '[]');
-            alert(`저장된 데이터: ${data.length}개월`);
+        // JSON 파일로 내보내기
+        function exportToJSON() {
+            // 현재 입력된 모든 데이터 수집
+            const exportData = {
+                year: document.getElementById('year').value,
+                month: document.getElementById('month').value,
+                
+                // 활성 사용자 지표
+                userMetrics: {
+                    dau: parseInt(document.getElementById('dau').value) || 0,
+                    mau: parseInt(document.getElementById('mau').value) || 0,
+                    pointsOnly: parseInt(document.getElementById('pointsOnly').value) || 0,
+                    tokensOnly: parseInt(document.getElementById('tokensOnly').value) || 0,
+                    both: parseInt(document.getElementById('both').value) || 0,
+                    appTime: parseInt(document.getElementById('appTime').value) || 0,
+                    activeDevices: parseInt(document.getElementById('activeDevices').value) || 0
+                },
+                
+                // 사용자 참여 지표
+                engagementMetrics: {
+                    usedDevices: parseInt(document.getElementById('usedDevices').value) || 0,
+                    avgExerciseTime: parseInt(document.getElementById('avgExerciseTime').value) || 0,
+                    totalExerciseTime: parseInt(document.getElementById('totalExerciseTime').value) || 0
+                },
+                
+                // 기술 성과 지표
+                performanceMetrics: {
+                    powerWh: parseInt(document.getElementById('powerWh').value) || 0,
+                    powerKwh: parseFloat(document.getElementById('powerKwh').value) || 0,
+                    totalPoints: parseInt(document.getElementById('totalPoints').value) || 0,
+                    totalTokens: parseFloat(document.getElementById('totalTokens').value) || 0
+                },
+                
+                // 메타데이터
+                metadata: {
+                    exportDate: new Date().toISOString(),
+                    dataSource: 'cyrus-bike-admin',
+                    version: '1.0',
+                    rawDataRecords: rawData.length || 0
+                },
+                
+                // 계산된 원시 지표 (백업용)
+                calculatedMetrics: calculatedMetrics
+            };
+            
+            // 파일명 생성
+            const fileName = `cyrus-bike-${exportData.year}-${exportData.month.padStart(2, '0')}.json`;
+            
+            // JSON 파일 다운로드
+            const jsonStr = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert(`✅ ${fileName} 파일이 다운로드되었습니다!\n\n이 파일을 대시보드에 업로드하면 시각화를 볼 수 있습니다.`);
+        }
+
+        // 모든 저장된 데이터를 JSON으로 내보내기
+        function exportAllDataToJSON() {
+            const allData = JSON.parse(localStorage.getItem('bikeMetrics') || '[]');
+            
+            if (allData.length === 0) {
+                alert('저장된 데이터가 없습니다.');
+                return;
+            }
+            
+            const exportData = {
+                totalMonths: allData.length,
+                data: allData.map(item => ({
+                    year: item.year,
+                    month: item.month,
+                    userMetrics: {
+                        dau: parseInt(item.dau) || 0,
+                        mau: parseInt(item.mau) || 0,
+                        pointsOnly: parseInt(item.pointsOnly) || 0,
+                        tokensOnly: parseInt(item.tokensOnly) || 0,
+                        both: parseInt(item.both) || 0,
+                        appTime: parseInt(item.appTime) || 0,
+                        activeDevices: parseInt(item.activeDevices) || 0
+                    },
+                    engagementMetrics: {
+                        usedDevices: parseInt(item.usedDevices) || 0,
+                        avgExerciseTime: parseInt(item.avgExerciseTime) || 0,
+                        totalExerciseTime: parseInt(item.totalExerciseTime) || 0
+                    },
+                    performanceMetrics: {
+                        powerWh: parseInt(item.powerWh) || 0,
+                        powerKwh: parseFloat(item.powerKwh) || 0,
+                        totalPoints: parseInt(item.totalPoints) || 0,
+                        totalTokens: parseFloat(item.totalTokens) || 0
+                    }
+                })),
+                metadata: {
+                    exportDate: new Date().toISOString(),
+                    dataSource: 'cyrus-bike-admin-all',
+                    version: '1.0'
+                }
+            };
+            
+            const fileName = `cyrus-bike-all-data.json`;
+            const jsonStr = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert(`✅ 전체 데이터 ${fileName} 파일이 다운로드되었습니다!`);
         }
 
         function showDataList() {
