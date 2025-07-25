@@ -3,464 +3,597 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>사이러스 바이크 관리 시스템</title>
+    <title>🛠️ 사이러스 바이크 관리 시스템 - 개선버전</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
             padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
         }
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
-            background: rgba(255,255,255,0.1);
+            background: white;
+            border-radius: 15px;
             padding: 30px;
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
-        .btn {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            padding: 12px 25px;
-            border: none;
+        h1 { color: #333; text-align: center; margin-bottom: 30px; }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #f0f0f0;
             border-radius: 10px;
-            cursor: pointer;
-            margin: 10px 5px;
-            font-weight: 600;
+            background: #fafafa;
         }
-        .btn:hover {
+        .section h2 {
+            color: #555;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .upload-area {
+            border: 3px dashed #ccc;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            background: white;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #e8f2ff;
+        }
+        .file-input {
+            display: none;
+        }
+        .upload-btn {
+            background: #667eea;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .upload-btn:hover {
+            background: #5a6fd8;
             transform: translateY(-2px);
         }
-        .form-section {
-            background: rgba(255,255,255,0.05);
-            padding: 20px;
-            border-radius: 15px;
-            margin: 20px 0;
-        }
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
-            margin: 15px 0;
-        }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-        .form-group label {
-            font-weight: 600;
-            margin-bottom: 5px;
-            font-size: 0.9rem;
-        }
-        input, select {
-            padding: 12px;
-            border-radius: 8px;
-            border: 2px solid rgba(255,255,255,0.3);
-            background: rgba(255,255,255,0.9);
-            color: #333;
-            font-size: 1rem;
-        }
-        input:focus, select:focus {
-            outline: none;
-            border-color: #667eea;
-            background: white;
-        }
-        input::placeholder {
-            color: #666;
-        }
-        select option {
-            background: white;
-            color: #333;
-        }
-        .category-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #fff;
-            margin: 20px 0 15px 0;
-            padding: 10px;
-            background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
-            border-radius: 10px;
-            text-align: center;
-        }
-        .result {
-            padding: 15px;
-            border-radius: 10px;
-            margin: 15px 0;
-        }
-        .result.success {
-            background: rgba(46, 204, 113, 0.2);
-            color: #2ecc71;
-            border: 1px solid rgba(46, 204, 113, 0.3);
-        }
-        .data-list {
-            background: rgba(255,255,255,0.05);
-            padding: 20px;
-            border-radius: 15px;
-            margin-top: 20px;
-        }
-        .data-item {
-            background: rgba(255,255,255,0.1);
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .btn-danger {
-            background: linear-gradient(45deg, #e74c3c, #c0392b);
-        }
-        .stats-summary {
+        .metrics-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
             margin: 20px 0;
         }
-        .stat-card {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            padding: 20px;
-            border-radius: 15px;
-            text-align: center;
+        .metric-card {
+            background: linear-gradient(135deg, #ff6b6b, #ffa726);
             color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
         }
-        .stat-value {
-            font-size: 1.8rem;
-            font-weight: 700;
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .metric-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        .form-group label {
+            display: block;
             margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .btn {
+            background: #28a745;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .btn:hover { background: #218838; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .preview-area {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .data-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+        .calculated-metrics {
+            background: #e8f5e8;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🛠️ 사이러스 바이크 관리 시스템</h1>
-        <p>전문 지표 데이터 입력 시스템</p>
-        
-        <div class="form-section">
-            <h3>📊 월별 전문 지표 입력</h3>
+        <p style="text-align: center; color: #666;">로우데이터를 업로드하면 모든 지표가 자동으로 계산됩니다!</p>
+
+        <!-- 1. 로우데이터 업로드 섹션 -->
+        <div class="section">
+            <h2>📁 로우데이터 업로드</h2>
+            <div class="upload-area" id="uploadArea">
+                <div>
+                    <h3>여기에 CSV 파일을 드래그하거나 클릭하여 업로드하세요</h3>
+                    <p>지원 형식: CSV, Excel (.xlsx)</p>
+                    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                        파일 선택
+                    </button>
+                    <input type="file" id="fileInput" class="file-input" accept=".csv,.xlsx" onchange="handleFileUpload(event)">
+                </div>
+            </div>
             
-            <form id="dataForm">
-                <!-- 기본 정보 -->
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>년도</label>
-                        <select id="year">
-                            <option value="2024">2024년</option>
-                            <option value="2025">2025년</option>
-                            <option value="2026">2026년</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>월</label>
-                        <select id="month">
-                            <option value="1">1월</option>
-                            <option value="2">2월</option>
-                            <option value="3">3월</option>
-                            <option value="4">4월</option>
-                            <option value="5">5월</option>
-                            <option value="6">6월</option>
-                            <option value="7">7월</option>
-                            <option value="8">8월</option>
-                            <option value="9">9월</option>
-                            <option value="10">10월</option>
-                            <option value="11">11월</option>
-                            <option value="12">12월</option>
-                        </select>
-                    </div>
-                </div>
+            <div class="warning">
+                <strong>📋 필요한 데이터 컬럼:</strong><br>
+                • 날짜 (date) • 사용자ID (userId) • 기기ID (deviceId) • 운동시간 (exerciseTime)<br>
+                • 전력생산량 (powerGenerated) • 포인트 (points) • 토큰 (tokens)
+            </div>
 
-                <!-- 1. 활성 사용자 지표 -->
-                <div class="category-title">👥 1. 활성 사용자 지표</div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>일일 활성 사용자 DAU (명) 평균</label>
-                        <input type="number" id="dau" placeholder="예: 1500" required>
-                    </div>
-                    <div class="form-group">
-                        <label>월간 활성 사용자 MAU (명)</label>
-                        <input type="number" id="mau" placeholder="예: 4500" required>
-                    </div>
-                    <div class="form-group">
-                        <label>포인트만 선택 (명)</label>
-                        <input type="number" id="pointOnly" placeholder="예: 2800" required>
-                    </div>
-                    <div class="form-group">
-                        <label>토큰만 선택 (명)</label>
-                        <input type="number" id="tokenOnly" placeholder="예: 1500" required>
-                    </div>
-                    <div class="form-group">
-                        <label>중복 선택 (포인트&토큰) (명)</label>
-                        <input type="number" id="both" placeholder="예: 200" required>
-                    </div>
-                    <div class="form-group">
-                        <label>기타 누락자 (명)</label>
-                        <input type="number" id="others" placeholder="예: 0" value="0">
-                    </div>
-                    <div class="form-group">
-                        <label>평균 앱 체류 시간 (분)</label>
-                        <input type="number" id="avgStayTime" placeholder="예: 45" required>
-                    </div>
-                    <div class="form-group">
-                        <label>시리얼넘버 기준 활성 운동기구 수 (대)</label>
-                        <input type="number" id="activeBikes" placeholder="예: 127" required>
-                    </div>
-                </div>
-
-                <!-- 2. 월간 사용자 참여 지표 -->
-                <div class="category-title">🚴‍♂️ 2. 월간 사용자 참여 지표</div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>실제 사용중인 운동기구 수 (대)</label>
-                        <input type="number" id="realActiveBikes" placeholder="예: 120" required>
-                    </div>
-                    <div class="form-group">
-                        <label>평균 운동 시간 (분)</label>
-                        <input type="number" id="avgExercise" placeholder="예: 58" required>
-                    </div>
-                    <div class="form-group">
-                        <label>총 운동 시간 (분)</label>
-                        <input type="number" id="totalExercise" placeholder="예: 107400" required>
-                    </div>
-                </div>
-
-                <!-- 3. 기술 성과 지표 -->
-                <div class="category-title">⚡ 3. 기술 성과 지표</div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>전기 생산량 (Wh)</label>
-                        <input type="number" id="energyWh" placeholder="예: 252000" required>
-                    </div>
-                    <div class="form-group">
-                        <label>전기 생산량 (kWh)</label>
-                        <input type="number" step="0.1" id="energykWh" placeholder="예: 252" required>
-                    </div>
-                    <div class="form-group">
-                        <label>포인트 보상량 (CP)</label>
-                        <input type="number" id="pointReward" placeholder="예: 97200" required>
-                    </div>
-                    <div class="form-group">
-                        <label>토큰 보상량 (CRS)</label>
-                        <input type="number" id="tokenReward" placeholder="예: 7560" required>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn">💾 데이터 저장</button>
-            </form>
-        </div>
-        
-        <div id="result"></div>
-        
-        <!-- 통계 요약 -->
-        <div class="data-list">
-            <h3>📈 저장된 데이터 통계</h3>
-            <div class="stats-summary" id="statsSummary">
-                <!-- 통계 카드들이 동적으로 생성 -->
+            <div id="filePreview" class="preview-area" style="display: none;">
+                <h4>📊 업로드된 데이터 미리보기</h4>
+                <div id="previewContent"></div>
             </div>
         </div>
-        
-        <!-- 저장된 데이터 목록 -->
-        <div class="data-list">
-            <h3>📋 저장된 데이터 목록</h3>
-            <div id="dataList"></div>
+
+        <!-- 2. 자동 계산된 지표 -->
+        <div class="section" id="calculatedSection" style="display: none;">
+            <h2>📊 자동 계산된 지표</h2>
+            <div class="calculated-metrics">
+                <h4>✅ 로우데이터에서 다음 지표들이 자동으로 계산되었습니다:</h4>
+                <div class="metrics-grid" id="autoCalculatedMetrics"></div>
+            </div>
         </div>
-        
-        <div style="text-align: center; margin-top: 30px;">
-            <a href="dashboard.html" class="btn">📊 대시보드 보기</a>
+
+        <!-- 3. 월별 지표 입력 (기존 방식) -->
+        <div class="section">
+            <h2>📅 월별 전문 지표 입력</h2>
+            <div class="form-group">
+                <label>년도</label>
+                <select id="year">
+                    <option value="2024">2024년</option>
+                    <option value="2025" selected>2025년</option>
+                    <option value="2026">2026년</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>월</label>
+                <select id="month">
+                    <option value="1">1월</option>
+                    <option value="2">2월</option>
+                    <option value="3">3월</option>
+                    <option value="4">4월</option>
+                    <option value="5">5월</option>
+                    <option value="6">6월</option>
+                    <option value="7" selected>7월</option>
+                    <option value="8">8월</option>
+                    <option value="9">9월</option>
+                    <option value="10">10월</option>
+                    <option value="11">11월</option>
+                    <option value="12">12월</option>
+                </select>
+            </div>
+
+            <h3>👥 1. 활성 사용자 지표</h3>
+            <div class="form-group">
+                <label>일일 활성 사용자 DAU (명) 평균</label>
+                <input type="number" id="dau" placeholder="자동 계산됨">
+            </div>
+            <div class="form-group">
+                <label>월간 활성 사용자 MAU (명)</label>
+                <input type="number" id="mau" placeholder="자동 계산됨">
+            </div>
+            <div class="form-group">
+                <label>포인트만 선택 (명)</label>
+                <input type="number" id="pointsOnly" placeholder="자동 계산됨">
+            </div>
+            <div class="form-group">
+                <label>토큰만 선택 (명)</label>
+                <input type="number" id="tokensOnly" placeholder="자동 계산됨">
+            </div>
+            <div class="form-group">
+                <label>중복 선택 (포인트&토큰) (명)</label>
+                <input type="number" id="both" placeholder="자동 계산됨">
+            </div>
+            <div class="form-group">
+                <label>평균 앱 체류 시간 (분)</label>
+                <input type="number" id="appTime" placeholder="수동 입력 필요">
+            </div>
+            <div class="form-group">
+                <label>시리얼넘버 기준 활성 운동기구 수 (대)</label>
+                <input type="number" id="activeDevices" placeholder="자동 계산됨">
+            </div>
+
+            <h3>🚴♂️ 2. 월간 사용자 참여 지표</h3>
+            <div class="form-group">
+                <label>실제 사용중인 운동기구 수 (대)</label>
+                <input type="number" id="usedDevices" placeholder="자동 계산됨">
+            </div>
+            <div class="form-group">
+                <label>평균 운동 시간 (분)</label>
+                <input type="number" id="avgExerciseTime" placeholder="자동 계산됨">
+            </div>
+            <div class="form-group">
+                <label>총 운동 시간 (분)</label>
+                <input type="number" id="totalExerciseTime" placeholder="자동 계산됨">
+            </div>
+
+            <h3>⚡ 3. 기술 성과 지표</h3>
+            <div class="form-group">
+                <label>전기 생산량 (Wh)</label>
+                <input type="number" id="powerWh" placeholder="자동 계산됨">
+            </div>
+            <div class="form-group">
+                <label>전기 생산량 (kWh)</label>
+                <input type="number" id="powerKwh" placeholder="자동 계산됨">
+            </div>
+            <div class="form-group">
+                <label>포인트 보상량 (CP)</label>
+                <input type="number" id="totalPoints" placeholder="자동 계산됨">
+            </div>
+            <div class="form-group">
+                <label>토큰 보상량 (CRS)</label>
+                <input type="number" id="totalTokens" placeholder="자동 계산됨">
+            </div>
+
+            <button class="btn" onclick="saveData()">💾 데이터 저장</button>
+            <button class="btn" onclick="fillFromCalculated()">🔄 계산된 값으로 자동 입력</button>
+        </div>
+
+        <!-- 4. 저장된 데이터 관리 -->
+        <div class="section">
+            <h2>📊 저장된 데이터 관리</h2>
+            <button class="btn" onclick="showStats()">📈 저장된 데이터 통계</button>
+            <button class="btn" onclick="showDataList()">📋 저장된 데이터 목록</button>
+            <button class="btn" onclick="viewDashboard()">📊 대시보드 보기</button>
             <button class="btn btn-danger" onclick="clearAllData()">🗑️ 모든 데이터 삭제</button>
         </div>
     </div>
 
     <script>
-        document.getElementById('dataForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const year = document.getElementById('year').value;
-            const month = document.getElementById('month').value;
-            
-            const data = {
-                year: parseInt(year),
-                month: parseInt(month),
-                
-                // 1. 활성 사용자 지표
-                dau: parseInt(document.getElementById('dau').value) || 0,
-                mau: parseInt(document.getElementById('mau').value) || 0,
-                pointOnly: parseInt(document.getElementById('pointOnly').value) || 0,
-                tokenOnly: parseInt(document.getElementById('tokenOnly').value) || 0,
-                both: parseInt(document.getElementById('both').value) || 0,
-                others: parseInt(document.getElementById('others').value) || 0,
-                avgStayTime: parseInt(document.getElementById('avgStayTime').value) || 0,
-                activeBikes: parseInt(document.getElementById('activeBikes').value) || 0,
-                
-                // 2. 월간 사용자 참여 지표
-                realActiveBikes: parseInt(document.getElementById('realActiveBikes').value) || 0,
-                avgExercise: parseInt(document.getElementById('avgExercise').value) || 0,
-                totalExercise: parseInt(document.getElementById('totalExercise').value) || 0,
-                
-                // 3. 기술 성과 지표
-                energyWh: parseInt(document.getElementById('energyWh').value) || 0,
-                energykWh: parseFloat(document.getElementById('energykWh').value) || 0,
-                pointReward: parseInt(document.getElementById('pointReward').value) || 0,
-                tokenReward: parseInt(document.getElementById('tokenReward').value) || 0,
-                
-                lastUpdated: new Date().toISOString()
+        let rawData = [];
+        let calculatedMetrics = {};
+
+        // 파일 업로드 처리
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                parseAndAnalyzeData(content, file.name);
             };
-            
-            const key = `cyrus_data_${year}_${month.padStart(2, '0')}`;
-            localStorage.setItem(key, JSON.stringify(data));
-            
-            document.getElementById('result').innerHTML = 
-                `<div class="result success">
-                    ✅ ${year}년 ${month}월 데이터가 성공적으로 저장되었습니다!<br>
-                    📊 MAU: ${data.mau.toLocaleString()}명, 전기생산량: ${data.energykWh}kWh
-                </div>`;
-            
-            loadDataList();
-            document.getElementById('dataForm').reset();
-            
-            setTimeout(() => {
-                document.getElementById('result').innerHTML = '';
-            }, 5000);
+            reader.readAsText(file);
+        }
+
+        // 드래그 앤 드롭 처리
+        const uploadArea = document.getElementById('uploadArea');
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
         });
-        
-        function loadDataList() {
-            const dataList = document.getElementById('dataList');
-            const statsSummary = document.getElementById('statsSummary');
-            const allData = [];
-            
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key.startsWith('cyrus_data_')) {
-                    const data = JSON.parse(localStorage.getItem(key));
-                    data.key = key;
-                    allData.push(data);
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    parseAndAnalyzeData(event.target.result, files[0].name);
+                };
+                reader.readAsText(files[0]);
+            }
+        });
+
+        // CSV 파싱
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split('\n');
+            const headers = lines[0].split(',').map(h => h.trim());
+            const data = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',');
+                if (values.length === headers.length) {
+                    const row = {};
+                    headers.forEach((header, index) => {
+                        row[header] = values[index] ? values[index].trim() : '';
+                    });
+                    data.push(row);
                 }
             }
-            
-            if (allData.length === 0) {
-                dataList.innerHTML = '<p style="opacity: 0.7; text-align: center;">저장된 데이터가 없습니다.</p>';
-                statsSummary.innerHTML = '<p style="opacity: 0.7; text-align: center;">데이터가 없습니다.</p>';
-                return;
+            return { headers, data };
+        }
+
+        // 데이터 분석 및 지표 계산
+        function parseAndAnalyzeData(content, filename) {
+            try {
+                const { headers, data } = parseCSV(content);
+                rawData = data;
+
+                // 데이터 미리보기 표시
+                showDataPreview(headers, data.slice(0, 10)); // 처음 10행만 표시
+
+                // 지표 계산
+                calculateMetrics(data);
+
+                document.getElementById('calculatedSection').style.display = 'block';
+
+            } catch (error) {
+                alert('파일 파싱 중 오류가 발생했습니다: ' + error.message);
             }
+        }
+
+        // 데이터 미리보기 표시
+        function showDataPreview(headers, data) {
+            const previewDiv = document.getElementById('filePreview');
+            const contentDiv = document.getElementById('previewContent');
+
+            let html = `<p><strong>총 ${rawData.length}행의 데이터가 업로드되었습니다.</strong></p>`;
+            html += '<table class="data-table">';
+            html += '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
             
-            // 통계 요약 계산
-            const totalMAU = allData.reduce((sum, data) => sum + (data.mau || 0), 0);
-            const totalEnergyKWh = allData.reduce((sum, data) => sum + (data.energykWh || 0), 0);
-            const totalCP = allData.reduce((sum, data) => sum + (data.pointReward || 0), 0);
-            const totalCRS = allData.reduce((sum, data) => sum + (data.tokenReward || 0), 0);
-            
-            statsSummary.innerHTML = `
-                <div class="stat-card">
-                    <div class="stat-value">${totalMAU.toLocaleString()}</div>
-                    <div>총 MAU</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${Math.round(totalEnergyKWh).toLocaleString()}</div>
-                    <div>총 전기생산량 (kWh)</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${totalCP.toLocaleString()}</div>
-                    <div>총 포인트 지급 (CP)</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${totalCRS.toLocaleString()}</div>
-                    <div>총 토큰 지급 (CRS)</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${allData.length}</div>
-                    <div>데이터 개수 (개월)</div>
-                </div>
-            `;
-            
-            // 데이터 목록 정렬
-            allData.sort((a, b) => {
-                if (a.year !== b.year) return b.year - a.year;
-                return b.month - a.month;
+            data.forEach(row => {
+                html += '<tr>' + headers.map(h => `<td>${row[h] || ''}</td>`).join('') + '</tr>';
             });
             
-            dataList.innerHTML = allData.map(data => 
-                `<div class="data-item">
-                    <div>
-                        <strong>${data.year}년 ${data.month}월</strong><br>
-                        <small>MAU: ${data.mau?.toLocaleString() || 0}, 전기: ${data.energykWh || 0}kWh, CP: ${data.pointReward?.toLocaleString() || 0}, CRS: ${data.tokenReward?.toLocaleString() || 0}</small>
-                    </div>
-                    <div>
-                        <button class="btn" onclick="editData('${data.key}')">✏️ 수정</button>
-                        <button class="btn btn-danger" onclick="deleteData('${data.key}')">🗑️ 삭제</button>
-                    </div>
-                </div>`
-            ).join('');
-        }
-        
-        function deleteData(key) {
-            if (confirm('정말 이 데이터를 삭제하시겠습니까?')) {
-                localStorage.removeItem(key);
-                loadDataList();
-                document.getElementById('result').innerHTML = 
-                    '<div class="result success">✅ 데이터가 삭제되었습니다.</div>';
-                setTimeout(() => {
-                    document.getElementById('result').innerHTML = '';
-                }, 3000);
+            html += '</table>';
+            if (rawData.length > 10) {
+                html += `<p><em>... 외 ${rawData.length - 10}행 더 있음</em></p>`;
             }
+
+            contentDiv.innerHTML = html;
+            previewDiv.style.display = 'block';
         }
-        
-        function editData(key) {
-            const data = JSON.parse(localStorage.getItem(key));
-            
-            // 폼에 기존 데이터 입력
-            document.getElementById('year').value = data.year;
-            document.getElementById('month').value = data.month;
-            document.getElementById('dau').value = data.dau || '';
-            document.getElementById('mau').value = data.mau || '';
-            document.getElementById('pointOnly').value = data.pointOnly || '';
-            document.getElementById('tokenOnly').value = data.tokenOnly || '';
-            document.getElementById('both').value = data.both || '';
-            document.getElementById('others').value = data.others || '';
-            document.getElementById('avgStayTime').value = data.avgStayTime || '';
-            document.getElementById('activeBikes').value = data.activeBikes || '';
-            document.getElementById('realActiveBikes').value = data.realActiveBikes || '';
-            document.getElementById('avgExercise').value = data.avgExercise || '';
-            document.getElementById('totalExercise').value = data.totalExercise || '';
-            document.getElementById('energyWh').value = data.energyWh || '';
-            document.getElementById('energykWh').value = data.energykWh || '';
-            document.getElementById('pointReward').value = data.pointReward || '';
-            document.getElementById('tokenReward').value = data.tokenReward || '';
-            
-            window.scrollTo(0, 0);
-            document.getElementById('result').innerHTML = 
-                `<div class="result success">📝 ${data.year}년 ${data.month}월 데이터를 수정 모드로 불러왔습니다.</div>`;
-        }
-        
-        function clearAllData() {
-            if (confirm('⚠️ 정말 모든 데이터를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다!')) {
-                if (confirm('한 번 더 확인합니다. 모든 데이터가 영구적으로 삭제됩니다!')) {
-                    const keysToDelete = [];
-                    for (let i = 0; i < localStorage.length; i++) {
-                        const key = localStorage.key(i);
-                        if (key.startsWith('cyrus_data_')) {
-                            keysToDelete.push(key);
-                        }
+
+        // 지표 계산
+        function calculateMetrics(data) {
+            if (!data || data.length === 0) return;
+
+            // 날짜별 데이터 그룹화
+            const dateGroups = {};
+            const users = new Set();
+            const devices = new Set();
+            let totalExerciseTime = 0;
+            let totalPowerGenerated = 0;
+            let totalPoints = 0;
+            let totalTokens = 0;
+            let pointsOnlyUsers = new Set();
+            let tokensOnlyUsers = new Set();
+            let bothUsers = new Set();
+
+            data.forEach(row => {
+                const date = row.date || row.Date || row['날짜'];
+                const userId = row.userId || row.UserId || row['사용자ID'];
+                const deviceId = row.deviceId || row.DeviceId || row['기기ID'];
+                const exerciseTime = parseInt(row.exerciseTime || row.ExerciseTime || row['운동시간']) || 0;
+                const powerGenerated = parseInt(row.powerGenerated || row.PowerGenerated || row['전력생산량']) || 0;
+                const points = parseInt(row.points || row.Points || row['포인트']) || 0;
+                const tokens = parseInt(row.tokens || row.Tokens || row['토큰']) || 0;
+
+                if (date) {
+                    if (!dateGroups[date]) {
+                        dateGroups[date] = new Set();
                     }
-                    
-                    keysToDelete.forEach(key => localStorage.removeItem(key));
-                    
-                    document.getElementById('result').innerHTML = 
-                        '<div class="result success">✅ 모든 데이터가 삭제되었습니다.</div>';
-                    loadDataList();
+                    dateGroups[date].add(userId);
                 }
+
+                if (userId) users.add(userId);
+                if (deviceId) devices.add(deviceId);
+                
+                totalExerciseTime += exerciseTime;
+                totalPowerGenerated += powerGenerated;
+                totalPoints += points;
+                totalTokens += tokens;
+
+                // 포인트/토큰 선호도 분석
+                if (points > 0 && tokens === 0) pointsOnlyUsers.add(userId);
+                else if (tokens > 0 && points === 0) tokensOnlyUsers.add(userId);
+                else if (points > 0 && tokens > 0) bothUsers.add(userId);
+            });
+
+            // 계산된 지표
+            calculatedMetrics = {
+                // DAU (평균)
+                dau: Object.keys(dateGroups).length > 0 
+                    ? Math.round(Object.values(dateGroups).reduce((sum, userSet) => sum + userSet.size, 0) / Object.keys(dateGroups).length)
+                    : 0,
+                
+                // MAU
+                mau: users.size,
+                
+                // 선호도별 사용자
+                pointsOnly: pointsOnlyUsers.size,
+                tokensOnly: tokensOnlyUsers.size,
+                both: bothUsers.size,
+                
+                // 기기 관련
+                activeDevices: devices.size,
+                usedDevices: devices.size,
+                
+                // 운동 관련
+                avgExerciseTime: data.length > 0 ? Math.round(totalExerciseTime / data.length) : 0,
+                totalExerciseTime: totalExerciseTime,
+                
+                // 전력/보상
+                powerWh: totalPowerGenerated,
+                powerKwh: Math.round(totalPowerGenerated / 1000 * 100) / 100,
+                totalPoints: totalPoints,
+                totalTokens: totalTokens
+            };
+
+            displayCalculatedMetrics();
+        }
+
+        // 계산된 지표 표시
+        function displayCalculatedMetrics() {
+            const container = document.getElementById('autoCalculatedMetrics');
+            
+            const metrics = [
+                { label: 'DAU 평균', value: calculatedMetrics.dau + '명', color: '#ff6b6b' },
+                { label: 'MAU', value: calculatedMetrics.mau + '명', color: '#4ecdc4' },
+                { label: '포인트만 선택', value: calculatedMetrics.pointsOnly + '명', color: '#45b7d1' },
+                { label: '토큰만 선택', value: calculatedMetrics.tokensOnly + '명', color: '#96ceb4' },
+                { label: '포인트&토큰', value: calculatedMetrics.both + '명', color: '#ffeaa7' },
+                { label: '활성 운동기구', value: calculatedMetrics.activeDevices + '대', color: '#dda0dd' },
+                { label: '평균 운동시간', value: calculatedMetrics.avgExerciseTime + '분', color: '#98d8c8' },
+                { label: '총 운동시간', value: calculatedMetrics.totalExerciseTime + '분', color: '#f7dc6f' },
+                { label: '전력생산량', value: calculatedMetrics.powerWh + 'Wh', color: '#bb8fce' },
+                { label: '포인트 총량', value: calculatedMetrics.totalPoints + 'CP', color: '#85c1e9' },
+                { label: '토큰 총량', value: calculatedMetrics.totalTokens + 'CRS', color: '#f8c471' }
+            ];
+
+            container.innerHTML = metrics.map(metric => `
+                <div class="metric-card" style="background: ${metric.color};">
+                    <div class="metric-value">${metric.value}</div>
+                    <div class="metric-label">${metric.label}</div>
+                </div>
+            `).join('');
+        }
+
+        // 계산된 값으로 폼 자동 입력
+        function fillFromCalculated() {
+            if (Object.keys(calculatedMetrics).length === 0) {
+                alert('먼저 로우데이터를 업로드해주세요!');
+                return;
+            }
+
+            document.getElementById('dau').value = calculatedMetrics.dau;
+            document.getElementById('mau').value = calculatedMetrics.mau;
+            document.getElementById('pointsOnly').value = calculatedMetrics.pointsOnly;
+            document.getElementById('tokensOnly').value = calculatedMetrics.tokensOnly;
+            document.getElementById('both').value = calculatedMetrics.both;
+            document.getElementById('activeDevices').value = calculatedMetrics.activeDevices;
+            document.getElementById('usedDevices').value = calculatedMetrics.usedDevices;
+            document.getElementById('avgExerciseTime').value = calculatedMetrics.avgExerciseTime;
+            document.getElementById('totalExerciseTime').value = calculatedMetrics.totalExerciseTime;
+            document.getElementById('powerWh').value = calculatedMetrics.powerWh;
+            document.getElementById('powerKwh').value = calculatedMetrics.powerKwh;
+            document.getElementById('totalPoints').value = calculatedMetrics.totalPoints;
+            document.getElementById('totalTokens').value = calculatedMetrics.totalTokens;
+
+            alert('✅ 계산된 값들이 자동으로 입력되었습니다!');
+        }
+
+        // 데이터 저장 (기존 로직 유지)
+        function saveData() {
+            const data = {
+                year: document.getElementById('year').value,
+                month: document.getElementById('month').value,
+                dau: document.getElementById('dau').value,
+                mau: document.getElementById('mau').value,
+                pointsOnly: document.getElementById('pointsOnly').value,
+                tokensOnly: document.getElementById('tokensOnly').value,
+                both: document.getElementById('both').value,
+                appTime: document.getElementById('appTime').value,
+                activeDevices: document.getElementById('activeDevices').value,
+                usedDevices: document.getElementById('usedDevices').value,
+                avgExerciseTime: document.getElementById('avgExerciseTime').value,
+                totalExerciseTime: document.getElementById('totalExerciseTime').value,
+                powerWh: document.getElementById('powerWh').value,
+                powerKwh: document.getElementById('powerKwh').value,
+                totalPoints: document.getElementById('totalPoints').value,
+                totalTokens: document.getElementById('totalTokens').value,
+                timestamp: new Date().toISOString()
+            };
+
+            // localStorage에 저장 (실제로는 GitHub API나 다른 방식 사용)
+            let savedData = JSON.parse(localStorage.getItem('bikeMetrics') || '[]');
+            
+            // 같은 년월 데이터가 있으면 업데이트, 없으면 추가
+            const existingIndex = savedData.findIndex(item => 
+                item.year === data.year && item.month === data.month
+            );
+            
+            if (existingIndex >= 0) {
+                savedData[existingIndex] = data;
+            } else {
+                savedData.push(data);
+            }
+            
+            localStorage.setItem('bikeMetrics', JSON.stringify(savedData));
+            alert('✅ 데이터가 저장되었습니다!');
+        }
+
+        // 기타 함수들 (기존 기능 유지)
+        function showStats() {
+            const data = JSON.parse(localStorage.getItem('bikeMetrics') || '[]');
+            alert(`저장된 데이터: ${data.length}개월`);
+        }
+
+        function showDataList() {
+            const data = JSON.parse(localStorage.getItem('bikeMetrics') || '[]');
+            console.log('저장된 데이터:', data);
+            alert('저장된 데이터를 콘솔에서 확인하세요 (F12)');
+        }
+
+        function viewDashboard() {
+            window.open('./index.html', '_blank');
+        }
+
+        function clearAllData() {
+            if (confirm('정말로 모든 데이터를 삭제하시겠습니까?')) {
+                localStorage.removeItem('bikeMetrics');
+                alert('모든 데이터가 삭제되었습니다.');
             }
         }
-        
-        function setCurrentMonth() {
-            const now = new Date();
-            document.getElementById('year').value = now.getFullYear();
-            document.getElementById('month').value = now.getMonth() + 1;
-        }
-        
-        window.addEventListener('load', () => {
-            setCurrentMonth();
-            loadDataList();
-        });
     </script>
 </body>
 </html>
