@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사이러스 바이크 대시보드</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            color: white;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+        .card-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 사이러스 바이크 대시보드</h1>
+        
+        <div class="cards">
+            <div class="card">
+                <h3>📈 총 MAU</h3>
+                <div class="card-value" id="totalMAU">0</div>
+            </div>
+            <div class="card">
+                <h3>⚡ 총 전기생산량</h3>
+                <div class="card-value" id="totalEnergy">0</div>
+                <div>kWh</div>
+            </div>
+            <div class="card">
+                <h3>📅 데이터 개수</h3>
+                <div class="card-value" id="dataCount">0</div>
+                <div>개월</div>
+            </div>
+        </div>
+        
+        <div id="monthlyData"></div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="admin.html" class="btn">🛠️ 관리 시스템</a>
+        </div>
+    </div>
+
+    <script>
+        function loadData() {
+            const allData = [];
+            let totalMAU = 0;
+            let totalEnergy = 0;
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('cyrus_data_')) {
+                    const data = JSON.parse(localStorage.getItem(key));
+                    allData.push(data);
+                    totalMAU += data.mau || 0;
+                    totalEnergy += data.energy || 0;
+                }
+            }
+            
+            document.getElementById('totalMAU').textContent = totalMAU.toLocaleString();
+            document.getElementById('totalEnergy').textContent = totalEnergy.toLocaleString();
+            document.getElementById('dataCount').textContent = allData.length;
+            
+            if (allData.length === 0) {
+                document.getElementById('monthlyData').innerHTML = 
+                    '<div style="text-align: center; padding: 40px; opacity: 0.7;">저장된 데이터가 없습니다. 관리 시스템에서 데이터를 입력해주세요.</div>';
+                return;
+            }
+            
+            allData.sort((a, b) => {
+                if (a.year !== b.year) return a.year - b.year;
+                return a.month - b.month;
+            });
+            
+            document.getElementById('monthlyData').innerHTML = `
+                <h3>📊 월별 데이터</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    ${allData.map(data => `
+                        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; text-align: center;">
+                            <h4>${data.year}년 ${data.month}월</h4>
+                            <div>MAU: ${data.mau?.toLocaleString() || 0}</div>
+                            <div>전기: ${data.energy || 0}kWh</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+        
+        window.addEventListener('load', loadData);
+        
+        // 2초마다 데이터 새로고침 (실시간 업데이트)
+        setInterval(loadData, 2000);
+    </script>
+</body>
+</html>
