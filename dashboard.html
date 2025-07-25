@@ -344,23 +344,36 @@
                     const jsonData = JSON.parse(e.target.result);
                     currentData = jsonData;
                     
-                    // 데이터 유형 확인 및 표시
-                    if (jsonData.totalMonths) {
-                        // 전체 데이터 파일
-                        displayMultiMonthData(jsonData);
-                    } else if (jsonData.year && jsonData.month) {
-                        // 단일 월 데이터 파일
-                        displaySingleMonthData(jsonData);
-                    } else {
-                        showError('올바른 사이러스 바이크 JSON 파일이 아닙니다.');
+                    // Chart.js 로드 확인 후 처리
+                    if (typeof Chart === 'undefined') {
+                        showError('Chart.js 라이브러리가 로드되지 않았습니다. 페이지를 새로고침해주세요.');
                         return;
                     }
                     
-                    // 업로드 섹션 숨기고 대시보드 표시
-                    document.getElementById('uploadSection').style.display = 'none';
-                    document.getElementById('dashboardContent').style.display = 'block';
+                    // 기존 차트 제거
+                    destroyCharts();
+                    
+                    // 잠시 대기 후 차트 생성 (DOM 안정화)
+                    setTimeout(() => {
+                        // 데이터 유형 확인 및 표시
+                        if (jsonData.totalMonths) {
+                            // 전체 데이터 파일
+                            displayMultiMonthData(jsonData);
+                        } else if (jsonData.year && jsonData.month) {
+                            // 단일 월 데이터 파일
+                            displaySingleMonthData(jsonData);
+                        } else {
+                            showError('올바른 사이러스 바이크 JSON 파일이 아닙니다.');
+                            return;
+                        }
+                        
+                        // 업로드 섹션 숨기고 대시보드 표시
+                        document.getElementById('uploadSection').style.display = 'none';
+                        document.getElementById('dashboardContent').style.display = 'block';
+                    }, 100);
                     
                 } catch (error) {
+                    console.error('JSON 파싱 오류:', error);
                     showError('JSON 파일을 읽는 중 오류가 발생했습니다: ' + error.message);
                 }
             };
@@ -433,380 +446,28 @@
 
         // 단일 월 차트 생성
         function createSingleMonthCharts(data) {
-            // 사용자 활동 차트 (도넛 차트)
-            const userCtx = document.getElementById('userChart').getContext('2d');
-            charts.userChart = new Chart(userCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['DAU', 'MAU'],
-                    datasets: [{
-                        data: [data.userMetrics.dau, data.userMetrics.mau],
-                        backgroundColor: ['#ff6b6b', '#4ecdc4'],
-                        borderWidth: 2,
-                        borderColor: '#fff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
-
-            // 운동시간 차트 (단일 바)
-            const exerciseCtx = document.getElementById('exerciseChart').getContext('2d');
-            charts.exerciseChart = new Chart(exerciseCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['평균 운동시간', '총 운동시간(시간)'],
-                    datasets: [{
-                        data: [
-                            data.engagementMetrics.avgExerciseTime,
-                            Math.round(data.engagementMetrics.totalExerciseTime / 60)
-                        ],
-                        backgroundColor: ['#96ceb4', '#ffeaa7'],
-                        borderColor: ['#8bc34a', '#f39c12'],
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: '시간'
-                            }
-                        }
-                    }
-                }
-            });
-
-            // 전력 생산 차트
-            const powerCtx = document.getElementById('powerChart').getContext('2d');
-            charts.powerChart = new Chart(powerCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['전력 생산량'],
-                    datasets: [{
-                        label: 'kWh',
-                        data: [data.performanceMetrics.powerKwh],
-                        backgroundColor: '#dda0dd',
-                        borderColor: '#ba68c8',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'kWh'
-                            }
-                        }
-                    }
-                }
-            });
-
-            // 보상 추이 차트 (단일 월이므로 총량만)
-            const rewardTrendCtx = document.getElementById('rewardTrendChart').getContext('2d');
-            charts.rewardTrendChart = new Chart(rewardTrendCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['포인트', '토큰'],
-                    datasets: [{
-                        data: [
-                            data.performanceMetrics.totalPoints,
-                            data.performanceMetrics.totalTokens
-                        ],
-                        backgroundColor: ['#85c1e9', '#f8c471'],
-                        borderColor: ['#3498db', '#f39c12'],
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: '보상량'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        // 트렌드 차트 생성 (다중 월)
-        function createTrendCharts(dataArray) {
-            const labels = dataArray.map(d => `${d.year}년 ${d.month}월`);
+            // DOM 요소 존재 확인
+            const userCanvas = document.getElementById('userChart');
+            const exerciseCanvas = document.getElementById('exerciseChart');
+            const powerCanvas = document.getElementById('powerChart');
+            const rewardTrendCanvas = document.getElementById('rewardTrendChart');
             
-            // 사용자 활동 트렌드
-            const userCtx = document.getElementById('userChart').getContext('2d');
-            charts.userChart = new Chart(userCtx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'DAU (일일 활성사용자)',
-                        data: dataArray.map(d => d.userMetrics.dau),
-                        borderColor: '#ff6b6b',
-                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#ff6b6b',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 6
-                    }, {
-                        label: 'MAU (월간 활성사용자)',
-                        data: dataArray.map(d => d.userMetrics.mau),
-                        borderColor: '#4ecdc4',
-                        backgroundColor: 'rgba(78, 205, 196, 0.1)',
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#4ecdc4',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: '사용자 수 (명)'
-                            }
-                        }
-                    }
-                }
-            });
+            if (!userCanvas || !exerciseCanvas || !powerCanvas || !rewardTrendCanvas) {
+                console.error('차트 캔버스 요소를 찾을 수 없습니다.');
+                return;
+            }
 
-            // 운동시간 트렌드 (별도 차트)
-            const exerciseCtx = document.getElementById('exerciseChart').getContext('2d');
-            charts.exerciseChart = new Chart(exerciseCtx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: '평균 운동시간 (분)',
-                        data: dataArray.map(d => d.engagementMetrics.avgExerciseTime),
-                        borderColor: '#96ceb4',
-                        backgroundColor: 'rgba(150, 206, 180, 0.2)',
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#96ceb4',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 6
-                    }, {
-                        label: '총 운동시간 (시간)',
-                        data: dataArray.map(d => Math.round(d.engagementMetrics.totalExerciseTime / 60)),
-                        borderColor: '#ffeaa7',
-                        backgroundColor: 'rgba(255, 234, 167, 0.2)',
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#ffeaa7',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 6,
-                        yAxisID: 'y1'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: {
-                                display: true,
-                                text: '평균 운동시간 (분)'
-                            }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            title: {
-                                display: true,
-                                text: '총 운동시간 (시간)'
-                            },
-                            grid: {
-                                drawOnChartArea: false,
-                            },
-                        }
-                    }
-                }
-            });
-
-            // 전력 생산 트렌드 (별도 차트)
-            const powerCtx = document.getElementById('powerChart').getContext('2d');
-            charts.powerChart = new Chart(powerCtx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: '전력 생산량 (kWh)',
-                        data: dataArray.map(d => d.performanceMetrics.powerKwh),
-                        borderColor: '#dda0dd',
-                        backgroundColor: 'rgba(221, 160, 221, 0.2)',
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#dda0dd',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: '전력 생산량 (kWh)'
-                            }
-                        }
-                    }
-                }
-            });
-
-            // 보상 지급 트렌드 (별도 차트)
-            const rewardTrendCtx = document.getElementById('rewardTrendChart').getContext('2d');
-            charts.rewardTrendChart = new Chart(rewardTrendCtx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: '포인트 (CP)',
-                        data: dataArray.map(d => d.performanceMetrics.totalPoints),
-                        borderColor: '#85c1e9',
-                        backgroundColor: 'rgba(133, 193, 233, 0.2)',
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#85c1e9',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 6
-                    }, {
-                        label: '토큰 (CRS)',
-                        data: dataArray.map(d => d.performanceMetrics.totalTokens),
-                        borderColor: '#f8c471',
-                        backgroundColor: 'rgba(248, 196, 113, 0.2)',
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#f8c471',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 6,
-                        yAxisID: 'y1'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: {
-                                display: true,
-                                text: '포인트 (CP)'
-                            }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            title: {
-                                display: true,
-                                text: '토큰 (CRS)'
-                            },
-                            grid: {
-                                drawOnChartArea: false,
-                            },
-                        }
-                    }
-                }
-            });
-        }
-
-        // 보상 차트 생성
-        function createRewardChart(dataArray) {
-            const rewardCtx = document.getElementById('rewardChart').getContext('2d');
-            
-            if (dataArray.length === 1) {
-                // 단일 월: 파이 차트
-                const data = dataArray[0];
-                charts.rewardChart = new Chart(rewardCtx, {
-                    type: 'pie',
+            try {
+                // 사용자 활동 차트 (도넛 차트)
+                const userCtx = userCanvas.getContext('2d');
+                charts.userChart = new Chart(userCtx, {
+                    type: 'doughnut',
                     data: {
-                        labels: ['포인트만 선택', '토큰만 선택', '포인트&토큰 선택'],
+                        labels: ['DAU', 'MAU'],
                         datasets: [{
-                            data: [
-                                data.userMetrics.pointsOnly,
-                                data.userMetrics.tokensOnly,
-                                data.userMetrics.both
-                            ],
-                            backgroundColor: ['#ff6b6b', '#4ecdc4', '#45b7d1'],
-                            borderWidth: 3,
+                            data: [data.userMetrics.dau, data.userMetrics.mau],
+                            backgroundColor: ['#ff6b6b', '#4ecdc4'],
+                            borderWidth: 2,
                             borderColor: '#fff'
                         }]
                     },
@@ -820,36 +481,176 @@
                         }
                     }
                 });
-            } else {
-                // 다중 월: 누적 바 차트
-                const labels = dataArray.map(d => `${d.year}년 ${d.month}월`);
-                charts.rewardChart = new Chart(rewardCtx, {
+
+                // 운동시간 차트 (단일 바)
+                const exerciseCtx = exerciseCanvas.getContext('2d');
+                charts.exerciseChart = new Chart(exerciseCtx, {
                     type: 'bar',
                     data: {
-                        labels: labels,
+                        labels: ['평균 운동시간', '총 운동시간(시간)'],
                         datasets: [{
-                            label: '포인트만',
-                            data: dataArray.map(d => d.userMetrics.pointsOnly),
-                            backgroundColor: '#ff6b6b'
-                        }, {
-                            label: '토큰만',
-                            data: dataArray.map(d => d.userMetrics.tokensOnly),
-                            backgroundColor: '#4ecdc4'
-                        }, {
-                            label: '포인트&토큰',
-                            data: dataArray.map(d => d.userMetrics.both),
-                            backgroundColor: '#45b7d1'
+                            data: [
+                                data.engagementMetrics.avgExerciseTime,
+                                Math.round(data.engagementMetrics.totalExerciseTime / 60)
+                            ],
+                            backgroundColor: ['#96ceb4', '#ffeaa7'],
+                            borderColor: ['#8bc34a', '#f39c12'],
+                            borderWidth: 2
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
                         scales: {
-                            x: {
-                                stacked: true
-                            },
                             y: {
-                                stacked: true,
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: '시간'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // 전력 생산 차트
+                const powerCtx = powerCanvas.getContext('2d');
+                charts.powerChart = new Chart(powerCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['전력 생산량'],
+                        datasets: [{
+                            label: 'kWh',
+                            data: [data.performanceMetrics.powerKwh],
+                            backgroundColor: '#dda0dd',
+                            borderColor: '#ba68c8',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'kWh'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // 보상 추이 차트 (단일 월이므로 총량만)
+                const rewardTrendCtx = rewardTrendCanvas.getContext('2d');
+                charts.rewardTrendChart = new Chart(rewardTrendCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['포인트', '토큰'],
+                        datasets: [{
+                            data: [
+                                data.performanceMetrics.totalPoints,
+                                data.performanceMetrics.totalTokens
+                            ],
+                            backgroundColor: ['#85c1e9', '#f8c471'],
+                            borderColor: ['#3498db', '#f39c12'],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: '보상량'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                console.log('단일 월 차트 생성 완료');
+            } catch (error) {
+                console.error('차트 생성 오류:', error);
+                showError('차트를 생성하는 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        // 트렌드 차트 생성 (다중 월)
+        function createTrendCharts(dataArray) {
+            const labels = dataArray.map(d => `${d.year}년 ${d.month}월`);
+            
+            try {
+                // DOM 요소 존재 확인
+                const userCanvas = document.getElementById('userChart');
+                const exerciseCanvas = document.getElementById('exerciseChart');
+                const powerCanvas = document.getElementById('powerChart');
+                const rewardTrendCanvas = document.getElementById('rewardTrendChart');
+                
+                if (!userCanvas || !exerciseCanvas || !powerCanvas || !rewardTrendCanvas) {
+                    console.error('차트 캔버스 요소를 찾을 수 없습니다.');
+                    return;
+                }
+                
+                // 사용자 활동 트렌드
+                const userCtx = userCanvas.getContext('2d');
+                charts.userChart = new Chart(userCtx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'DAU (일일 활성사용자)',
+                            data: dataArray.map(d => d.userMetrics.dau),
+                            borderColor: '#ff6b6b',
+                            backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#ff6b6b',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 6
+                        }, {
+                            label: 'MAU (월간 활성사용자)',
+                            data: dataArray.map(d => d.userMetrics.mau),
+                            borderColor: '#4ecdc4',
+                            backgroundColor: 'rgba(78, 205, 196, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#4ecdc4',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            y: {
                                 beginAtZero: true,
                                 title: {
                                     display: true,
@@ -859,6 +660,276 @@
                         }
                     }
                 });
+
+                // 운동시간 트렌드 (별도 차트)
+                const exerciseCtx = exerciseCanvas.getContext('2d');
+                charts.exerciseChart = new Chart(exerciseCtx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: '평균 운동시간 (분)',
+                            data: dataArray.map(d => d.engagementMetrics.avgExerciseTime),
+                            borderColor: '#96ceb4',
+                            backgroundColor: 'rgba(150, 206, 180, 0.2)',
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#96ceb4',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 6
+                        }, {
+                            label: '총 운동시간 (시간)',
+                            data: dataArray.map(d => Math.round(d.engagementMetrics.totalExerciseTime / 60)),
+                            borderColor: '#ffeaa7',
+                            backgroundColor: 'rgba(255, 234, 167, 0.2)',
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#ffeaa7',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 6,
+                            yAxisID: 'y1'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: {
+                                    display: true,
+                                    text: '평균 운동시간 (분)'
+                                }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                title: {
+                                    display: true,
+                                    text: '총 운동시간 (시간)'
+                                },
+                                grid: {
+                                    drawOnChartArea: false,
+                                },
+                            }
+                        }
+                    }
+                });
+
+                // 전력 생산 트렌드 (별도 차트)
+                const powerCtx = powerCanvas.getContext('2d');
+                charts.powerChart = new Chart(powerCtx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: '전력 생산량 (kWh)',
+                            data: dataArray.map(d => d.performanceMetrics.powerKwh),
+                            borderColor: '#dda0dd',
+                            backgroundColor: 'rgba(221, 160, 221, 0.2)',
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#dda0dd',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: '전력 생산량 (kWh)'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // 보상 지급 트렌드 (별도 차트)
+                const rewardTrendCtx = rewardTrendCanvas.getContext('2d');
+                charts.rewardTrendChart = new Chart(rewardTrendCtx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: '포인트 (CP)',
+                            data: dataArray.map(d => d.performanceMetrics.totalPoints),
+                            borderColor: '#85c1e9',
+                            backgroundColor: 'rgba(133, 193, 233, 0.2)',
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#85c1e9',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 6
+                        }, {
+                            label: '토큰 (CRS)',
+                            data: dataArray.map(d => d.performanceMetrics.totalTokens),
+                            borderColor: '#f8c471',
+                            backgroundColor: 'rgba(248, 196, 113, 0.2)',
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#f8c471',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 6,
+                            yAxisID: 'y1'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: {
+                                    display: true,
+                                    text: '포인트 (CP)'
+                                }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                title: {
+                                    display: true,
+                                    text: '토큰 (CRS)'
+                                },
+                                grid: {
+                                    drawOnChartArea: false,
+                                },
+                            }
+                        }
+                    }
+                });
+
+                console.log('트렌드 차트 생성 완료');
+            } catch (error) {
+                console.error('트렌드 차트 생성 오류:', error);
+                showError('트렌드 차트를 생성하는 중 오류가 발생했습니다: ' + error.message);
+            }
+        }토큰 (CRS)'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        }
+                    }
+                }
+            });
+        }
+
+        // 보상 차트 생성
+        function createRewardChart(dataArray) {
+            const rewardCanvas = document.getElementById('rewardChart');
+            if (!rewardCanvas) {
+                console.error('보상 차트 캔버스를 찾을 수 없습니다.');
+                return;
+            }
+
+            try {
+                const rewardCtx = rewardCanvas.getContext('2d');
+                
+                if (dataArray.length === 1) {
+                    // 단일 월: 파이 차트
+                    const data = dataArray[0];
+                    charts.rewardChart = new Chart(rewardCtx, {
+                        type: 'pie',
+                        data: {
+                            labels: ['포인트만 선택', '토큰만 선택', '포인트&토큰 선택'],
+                            datasets: [{
+                                data: [
+                                    data.userMetrics.pointsOnly,
+                                    data.userMetrics.tokensOnly,
+                                    data.userMetrics.both
+                                ],
+                                backgroundColor: ['#ff6b6b', '#4ecdc4', '#45b7d1'],
+                                borderWidth: 3,
+                                borderColor: '#fff'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    // 다중 월: 누적 바 차트
+                    const labels = dataArray.map(d => `${d.year}년 ${d.month}월`);
+                    charts.rewardChart = new Chart(rewardCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: '포인트만',
+                                data: dataArray.map(d => d.userMetrics.pointsOnly),
+                                backgroundColor: '#ff6b6b'
+                            }, {
+                                label: '토큰만',
+                                data: dataArray.map(d => d.userMetrics.tokensOnly),
+                                backgroundColor: '#4ecdc4'
+                            }, {
+                                label: '포인트&토큰',
+                                data: dataArray.map(d => d.userMetrics.both),
+                                backgroundColor: '#45b7d1'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {
+                                    stacked: true
+                                },
+                                y: {
+                                    stacked: true,
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: '사용자 수 (명)'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                console.log('보상 차트 생성 완료');
+            } catch (error) {
+                console.error('보상 차트 생성 오류:', error);
+                showError('보상 차트를 생성하는 중 오류가 발생했습니다: ' + error.message);
             }
         }
 
