@@ -13,28 +13,172 @@
             min-height: 100vh;
         }
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
-        .cards {
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+        .overview-cards {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
         }
-        .card {
+        .overview-card {
             background: rgba(255,255,255,0.1);
-            padding: 20px;
-            border-radius: 15px;
+            padding: 25px;
+            border-radius: 20px;
             backdrop-filter: blur(10px);
             text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .overview-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
         }
         .card-value {
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-weight: bold;
             color: #667eea;
-            margin: 10px 0;
+            margin: 15px 0 10px 0;
         }
+        .card-title {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .card-subtitle {
+            font-size: 0.8rem;
+            opacity: 0.6;
+        }
+        
+        /* 카테고리 섹션 */
+        .category-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .category-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 25px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .metric-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .metric-card:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateY(-3px);
+        }
+        .metric-card-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .metric-card-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            line-height: 1.3;
+        }
+        .metric-card-sublabel {
+            font-size: 0.75rem;
+            opacity: 0.6;
+            margin-top: 5px;
+        }
+        
+        /* 월별 데이터 그리드 */
+        .monthly-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .month-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+        }
+        .month-card:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-3px);
+        }
+        .month-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        .month-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .metric {
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 3px;
+        }
+        .metric-label {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            line-height: 1.1;
+        }
+        
         .btn {
             background: linear-gradient(45deg, #667eea, #764ba2);
             color: white;
@@ -45,80 +189,361 @@
             text-decoration: none;
             display: inline-block;
             margin: 10px;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 40px 0 30px 0;
+            text-align: center;
+            background: linear-gradient(45d, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            opacity: 0.6;
+            font-style: italic;
+            font-size: 1.1rem;
+        }
+        .update-time {
+            text-align: center;
+            opacity: 0.6;
+            margin-top: 30px;
+            font-size: 0.9rem;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📊 사이러스 바이크 대시보드</h1>
-        
-        <div class="cards">
-            <div class="card">
-                <h3>📈 총 MAU</h3>
-                <div class="card-value" id="totalMAU">0</div>
-            </div>
-            <div class="card">
-                <h3>⚡ 총 전기생산량</h3>
-                <div class="card-value" id="totalEnergy">0</div>
-                <div>kWh</div>
-            </div>
-            <div class="card">
-                <h3>📅 데이터 개수</h3>
-                <div class="card-value" id="dataCount">0</div>
-                <div>개월</div>
-            </div>
+        <div class="header">
+            <h1>📊 CYRUS BIKE PRO DASHBOARD</h1>
+            <p>사이러스 바이크 성과지표 전문 대시보드</p>
         </div>
         
-        <div id="monthlyData"></div>
+        <!-- 전체 요약 카드 -->
+        <div class="overview-cards">
+            <div class="overview-card">
+                <div class="card-title">총 MAU</div>
+                <div class="card-value" id="totalMAU">0</div>
+                <div class="card-subtitle">월간 활성 사용자</div>
+            </div>
+            <div class="overview-card">
+                <div class="card-title">총 전기생산량</div>
+                <div class="card-value" id="totalEnergy">0</div>
+                <div class="card-subtitle">kWh</div>
+            </div>
+            <div class="overview-card">
+                <div class="card-title">총 포인트 지급</div>
+                <div class="card-value" id="totalCP">0</div>
+                <div class="card-subtitle">CP</div>
+            </div>
+            <div class="overview-card">
+                <div class="card-title">총 토큰 지급</div>
+                <div class="card-value" id="totalCRS">0</div>
+                <div class="card-subtitle">CRS</div>
+            </div>
+            <div class="overview-card">
+                <div class="card-title">데이터 현황</div>
+                <div class="card-value" id="dataCount">0</div>
+                <div class="card-subtitle">개월</div>
+            </div>
+        </div>
+
+        <!-- 카테고리별 상세 지표 -->
+        <div class="section-title">📊 카테고리별 상세 분석</div>
         
-        <div style="text-align: center; margin-top: 30px;">
+        <!-- 1. 활성 사용자 지표 -->
+        <div class="category-section">
+            <div class="category-title">
+                <span>👥</span>
+                1. 활성 사용자 지표
+            </div>
+            <div class="category-grid" id="userMetrics">
+                <!-- 활성 사용자 지표가 동적으로 생성됩니다 -->
+            </div>
+        </div>
+
+        <!-- 2. 월간 사용자 참여 지표 -->
+        <div class="category-section">
+            <div class="category-title">
+                <span>🚴‍♂️</span>
+                2. 월간 사용자 참여 지표
+            </div>
+            <div class="category-grid" id="engagementMetrics">
+                <!-- 참여 지표가 동적으로 생성됩니다 -->
+            </div>
+        </div>
+
+        <!-- 3. 기술 성과 지표 -->
+        <div class="category-section">
+            <div class="category-title">
+                <span>⚡</span>
+                3. 기술 성과 지표
+            </div>
+            <div class="category-grid" id="techMetrics">
+                <!-- 기술 성과 지표가 동적으로 생성됩니다 -->
+            </div>
+        </div>
+
+        <!-- 월별 상세 데이터 -->
+        <div class="section-title">📅 월별 상세 데이터</div>
+        <div class="monthly-grid" id="monthlyGrid">
+            <!-- 월별 카드들이 동적으로 생성됩니다 -->
+        </div>
+        
+        <div style="text-align: center; margin-top: 40px;">
             <a href="admin.html" class="btn">🛠️ 관리 시스템</a>
+        </div>
+
+        <div class="update-time">
+            마지막 업데이트: <span id="lastUpdate">-</span>
         </div>
     </div>
 
     <script>
         function loadData() {
             const allData = [];
-            let totalMAU = 0;
-            let totalEnergy = 0;
+            let totalMAU = 0, totalEnergy = 0, totalCP = 0, totalCRS = 0;
             
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
                 if (key.startsWith('cyrus_data_')) {
                     const data = JSON.parse(localStorage.getItem(key));
                     allData.push(data);
+                    
                     totalMAU += data.mau || 0;
-                    totalEnergy += data.energy || 0;
+                    totalEnergy += data.energykWh || 0;
+                    totalCP += data.pointReward || 0;
+                    totalCRS += data.tokenReward || 0;
                 }
             }
             
+            // 전체 요약 업데이트
             document.getElementById('totalMAU').textContent = totalMAU.toLocaleString();
-            document.getElementById('totalEnergy').textContent = totalEnergy.toLocaleString();
+            document.getElementById('totalEnergy').textContent = Math.round(totalEnergy).toLocaleString();
+            document.getElementById('totalCP').textContent = totalCP.toLocaleString();
+            document.getElementById('totalCRS').textContent = totalCRS.toLocaleString();
             document.getElementById('dataCount').textContent = allData.length;
             
             if (allData.length === 0) {
-                document.getElementById('monthlyData').innerHTML = 
-                    '<div style="text-align: center; padding: 40px; opacity: 0.7;">저장된 데이터가 없습니다. 관리 시스템에서 데이터를 입력해주세요.</div>';
+                document.getElementById('userMetrics').innerHTML = '<div class="no-data">저장된 데이터가 없습니다.<br>관리 시스템에서 데이터를 입력해주세요.</div>';
+                document.getElementById('engagementMetrics').innerHTML = '<div class="no-data">데이터가 없습니다.</div>';
+                document.getElementById('techMetrics').innerHTML = '<div class="no-data">데이터가 없습니다.</div>';
+                document.getElementById('monthlyGrid').innerHTML = '<div class="no-data">월별 데이터가 없습니다.</div>';
                 return;
             }
             
+            // 카테고리별 지표 업데이트
+            updateCategoryMetrics(allData);
+            
+            // 월별 카드 업데이트
+            updateMonthlyCards(allData);
+            
+            // 업데이트 시간 표시
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleString('ko-KR');
+        }
+        
+        function updateCategoryMetrics(allData) {
+            // 누적값 계산
+            let totalDAU = 0, totalMAU = 0, totalPointOnly = 0, totalTokenOnly = 0, totalBoth = 0, totalOthers = 0;
+            let totalStayTime = 0, maxActiveBikes = 0, maxRealActiveBikes = 0;
+            let totalAvgExercise = 0, totalExerciseHours = 0;
+            let totalEnergyWh = 0, totalEnergyKWh = 0, totalCP = 0, totalCRS = 0;
+            
+            allData.forEach(data => {
+                totalDAU += data.dau || 0;
+                totalMAU += data.mau || 0;
+                totalPointOnly += data.pointOnly || 0;
+                totalTokenOnly += data.tokenOnly || 0;
+                totalBoth += data.both || 0;
+                totalOthers += data.others || 0;
+                totalStayTime += data.avgStayTime || 0;
+                maxActiveBikes = Math.max(maxActiveBikes, data.activeBikes || 0);
+                maxRealActiveBikes = Math.max(maxRealActiveBikes, data.realActiveBikes || 0);
+                totalAvgExercise += data.avgExercise || 0;
+                totalExerciseHours += Math.round((data.totalExercise || 0) / 60);
+                totalEnergyWh += data.energyWh || 0;
+                totalEnergyKWh += data.energykWh || 0;
+                totalCP += data.pointReward || 0;
+                totalCRS += data.tokenReward || 0;
+            });
+            
+            const dataLength = allData.length;
+            const avgDAU = dataLength > 0 ? Math.round(totalDAU / dataLength) : 0;
+            const avgStayTime = dataLength > 0 ? Math.round(totalStayTime / dataLength) : 0;
+            const avgExerciseTime = dataLength > 0 ? Math.round(totalAvgExercise / dataLength) : 0;
+            
+            // 1. 활성 사용자 지표
+            document.getElementById('userMetrics').innerHTML = `
+                <div class="metric-card">
+                    <div class="metric-card-value">${avgDAU.toLocaleString()}</div>
+                    <div class="metric-card-label">일일 활성 사용자</div>
+                    <div class="metric-card-sublabel">DAU 평균 (명)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-value">${totalMAU.toLocaleString()}</div>
+                    <div class="metric-card-label">월간 활성 사용자</div>
+                    <div class="metric-card-sublabel">MAU 누적 (명)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-value">${totalPointOnly.toLocaleString()}</div>
+                    <div class="metric-card-label">포인트만 선택</div>
+                    <div class="metric-card-sublabel">누적 인원 (명)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-value">${totalTokenOnly.toLocaleString()}</div>
+                    <div class="metric-card-label">토큰만 선택</div>
+                    <div class="metric-card-sublabel">누적 인원 (명)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-value">${totalBoth.toLocaleString()}</div>
+                    <div class="metric-card-label">중복 선택</div>
+                    <div class="metric-card-sublabel">포인트&토큰 (명)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-value">${totalOthers.toLocaleString()}</div>
+                    <div class="metric-card-label">기타 누락자</div>
+                    <div class="metric-card-sublabel">누적 인원 (명)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-value">${avgStayTime}</div>
+                    <div class="metric-card-label">평균 앱 체류시간</div>
+                    <div class="metric-card-sublabel">분</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-value">${maxActiveBikes}</div>
+                    <div class="metric-card-label">시리얼넘버 기준</div>
+                    <div class="metric-card-sublabel">활성 운동기구 (대)</div>
+                </div>
+            `;
+            
+            // 2. 월간 사용자 참여 지표
+            document.getElementById('engagementMetrics').innerHTML = `
+                <div class="metric-card">
+                    <div class="metric-card-value">${maxRealActiveBikes}</div>
+                    <div class="metric-card-label">실제 사용중인</div>
+                    <div class="metric-card-sublabel">운동기구 수 (대)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-value">${avgExerciseTime}</div>
+                    <div class="metric-card-label">평균 운동시간</div>
+                    <div class="metric-card-sublabel">분</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-value">${totalExerciseHours.toLocaleString()}</div>
+                    <div class="metric-card-label">총 운동시간</div>
+                    <div class="metric-card-sublabel">시간</div>
+                </div>
+            `;
+            
+            // 3. 기술 성과 지표
+            document.getElementById('techMetrics').innerHTML = `
+                <div class="metric-card">
+                    <div class="metric-card-value">${totalEnergyWh.toLocaleString()}</div>
+                    <div class="metric-card-label">전기 생산량</div>
+                    <div class="metric-card-sublabel">Wh</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-value">${Math.round(totalEnergyKWh).toLocaleString()}</div>
+                    <div class="metric-card-label">전기 생산량</div>
+                    <div class="metric-card-sublabel">kWh</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-value">${totalCP.toLocaleString()}</div>
+                    <div class="metric-card-label">포인트 보상량</div>
+                    <div class="metric-card-sublabel">CP</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-value">${totalCRS.toLocaleString()}</div>
+                    <div class="metric-card-label">토큰 보상량</div>
+                    <div class="metric-card-sublabel">CRS</div>
+                </div>
+            `;
+        }
+        
+        function updateMonthlyCards(allData) {
+            const monthNames = ['', '1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
+            
+            // 년도, 월 순으로 정렬
             allData.sort((a, b) => {
                 if (a.year !== b.year) return a.year - b.year;
                 return a.month - b.month;
             });
             
-            document.getElementById('monthlyData').innerHTML = `
-                <h3>📊 월별 데이터</h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                    ${allData.map(data => `
-                        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; text-align: center;">
-                            <h4>${data.year}년 ${data.month}월</h4>
-                            <div>MAU: ${data.mau?.toLocaleString() || 0}</div>
-                            <div>전기: ${data.energy || 0}kWh</div>
+            const monthlyGrid = document.getElementById('monthlyGrid');
+            
+            monthlyGrid.innerHTML = allData.map(data => `
+                <div class="month-card">
+                    <div class="month-header">
+                        <div class="month-title">${data.year}년 ${monthNames[data.month]}</div>
+                    </div>
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <div class="metric-value">${(data.dau || 0).toLocaleString()}</div>
+                            <div class="metric-label">DAU 평균</div>
                         </div>
-                    `).join('')}
+                        <div class="metric">
+                            <div class="metric-value">${(data.mau || 0).toLocaleString()}</div>
+                            <div class="metric-label">MAU</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${(data.pointOnly || 0).toLocaleString()}</div>
+                            <div class="metric-label">포인트만 선택</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${(data.tokenOnly || 0).toLocaleString()}</div>
+                            <div class="metric-label">토큰만 선택</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${(data.both || 0).toLocaleString()}</div>
+                            <div class="metric-label">중복 선택</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${(data.others || 0).toLocaleString()}</div>
+                            <div class="metric-label">기타 누락자</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${data.avgStayTime || 0}</div>
+                            <div class="metric-label">평균 체류시간(분)</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${data.activeBikes || 0}</div>
+                            <div class="metric-label">활성 기구 수(대)</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${data.realActiveBikes || 0}</div>
+                            <div class="metric-label">실제 사용기구(대)</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${data.avgExercise || 0}</div>
+                            <div class="metric-label">평균 운동시간(분)</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${Math.round((data.totalExercise || 0) / 60).toLocaleString()}</div>
+                            <div class="metric-label">총 운동시간(시간)</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${(data.energykWh || 0).toLocaleString()}</div>
+                            <div class="metric-label">전기생산량(kWh)</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${(data.pointReward || 0).toLocaleString()}</div>
+                            <div class="metric-label">포인트 보상(CP)</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${(data.tokenReward || 0).toLocaleString()}</div>
+                            <div class="metric-label">토큰 보상(CRS)</div>
+                        </div>
+                    </div>
                 </div>
-            `;
+            `).join('');
         }
         
         window.addEventListener('load', loadData);
