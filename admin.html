@@ -177,9 +177,10 @@
             </div>
             
             <div class="warning">
-                <strong>📋 필요한 데이터 컬럼:</strong><br>
-                • 날짜 (date) • 사용자ID (userId) • 기기ID (deviceId) • 운동시간 (exerciseTime)<br>
-                • 전력생산량 (powerGenerated) • 포인트 (points) • 토큰 (tokens)
+                <strong>📋 지원하는 데이터 컬럼 (사이러스 바이크 운동 데이터):</strong><br>
+                • bike_no (운동기구 번호) • owner_id (사용자 ID) • workout_date (운동 날짜)<br>
+                • energy (전력생산량 Wh) • duration (운동시간 분) • point (포인트) • token (토큰)<br>
+                <em>기타: user_email, workout_type, calories, status, duration_sec, workout_created_at, workout_updated_at</em>
             </div>
 
             <div id="filePreview" class="preview-area" style="display: none;">
@@ -303,8 +304,17 @@
     </div>
 
     <script>
+        // Papa Parse 라이브러리 추가
         let rawData = [];
         let calculatedMetrics = {};
+
+        // Papa Parse를 CDN에서 로드
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js';
+        script.onload = function() {
+            console.log('Papa Parse 로드 완료');
+        };
+        document.head.appendChild(script);
 
         // 파일 업로드 처리
         function handleFileUpload(event) {
@@ -343,23 +353,20 @@
             }
         });
 
-        // CSV 파싱
+        // CSV 파싱 (Papa Parse 사용)
         function parseCSV(csvText) {
-            const lines = csvText.trim().split('\n');
-            const headers = lines[0].split(',').map(h => h.trim());
-            const data = [];
-
-            for (let i = 1; i < lines.length; i++) {
-                const values = lines[i].split(',');
-                if (values.length === headers.length) {
-                    const row = {};
-                    headers.forEach((header, index) => {
-                        row[header] = values[index] ? values[index].trim() : '';
-                    });
-                    data.push(row);
-                }
+            try {
+                const parsed = Papa.parse(csvText, {
+                    header: true,
+                    dynamicTyping: true,
+                    skipEmptyLines: true,
+                    delimitersToGuess: [',', '\t', '|', ';']
+                });
+                return { headers: parsed.meta.fields, data: parsed.data };
+            } catch (error) {
+                console.error('CSV 파싱 오류:', error);
+                throw error;
             }
-            return { headers, data };
         }
 
         // 데이터 분석 및 지표 계산
@@ -403,82 +410,93 @@
             previewDiv.style.display = 'block';
         }
 
-        // 지표 계산
+        // 지표 계산 (실제 데이터 구조에 맞춤)
         function calculateMetrics(data) {
             if (!data || data.length === 0) return;
 
-            // 날짜별 데이터 그룹화
+            console.log('계산 시작:', data.length, '개 레코드');
+
+            // 1. 날짜별 사용자 그룹화 (DAU 계산)
             const dateGroups = {};
-            const users = new Set();
-            const devices = new Set();
-            let totalExerciseTime = 0;
-            let totalPowerGenerated = 0;
-            let totalPoints = 0;
-            let totalTokens = 0;
-            let pointsOnlyUsers = new Set();
-            let tokensOnlyUsers = new Set();
-            let bothUsers = new Set();
-
             data.forEach(row => {
-                const date = row.date || row.Date || row['날짜'];
-                const userId = row.userId || row.UserId || row['사용자ID'];
-                const deviceId = row.deviceId || row.DeviceId || row['기기ID'];
-                const exerciseTime = parseInt(row.exerciseTime || row.ExerciseTime || row['운동시간']) || 0;
-                const powerGenerated = parseInt(row.powerGenerated || row.PowerGenerated || row['전력생산량']) || 0;
-                const points = parseInt(row.points || row.Points || row['포인트']) || 0;
-                const tokens = parseInt(row.tokens || row.Tokens || row['토큰']) || 0;
-
+                const date = row.workout_date;
                 if (date) {
                     if (!dateGroups[date]) {
                         dateGroups[date] = new Set();
                     }
-                    dateGroups[date].add(userId);
+                    dateGroups[date].add(row.owner_id);
                 }
-
-                if (userId) users.add(userId);
-                if (deviceId) devices.add(deviceId);
-                
-                totalExerciseTime += exerciseTime;
-                totalPowerGenerated += powerGenerated;
-                totalPoints += points;
-                totalTokens += tokens;
-
-                // 포인트/토큰 선호도 분석
-                if (points > 0 && tokens === 0) pointsOnlyUsers.add(userId);
-                else if (tokens > 0 && points === 0) tokensOnlyUsers.add(userId);
-                else if (points > 0 && tokens > 0) bothUsers.add(userId);
             });
 
-            // 계산된 지표
+            // DAU 계산 (일일 활성 사용자의 평균)
+            const dailyUserCounts = Object.values(dateGroups).map(userSet => userSet.size);
+            const avgDAU = dailyUserCounts.length > 0 
+                ? Math.round(dailyUserCounts.reduce((a, b) => a + b, 0) / dailyUserCounts.length)
+                : 0;
+
+            // 2. 전체 고유 사용자 수 (MAU)
+            const uniqueUsers = new Set(data.map(row => row.owner_id));
+            const uniqueBikes = new Set(data.map(row => row.bike_no));
+
+            // 3. 포인트/토큰 선호도 분석
+            const userPreferences = {};
+            data.forEach(row => {
+                const userId = row.owner_id;
+                if (!userPreferences[userId]) {
+                    userPreferences[userId] = { totalPoints: 0, totalTokens: 0 };
+                }
+                userPreferences[userId].totalPoints += row.point || 0;
+                userPreferences[userId].totalTokens += row.token || 0;
+            });
+
+            let pointsOnlyUsers = 0;
+            let tokensOnlyUsers = 0;
+            let bothUsers = 0;
+
+            Object.values(userPreferences).forEach(pref => {
+                if (pref.totalPoints > 0 && pref.totalTokens === 0) {
+                    pointsOnlyUsers++;
+                } else if (pref.totalTokens > 0 && pref.totalPoints === 0) {
+                    tokensOnlyUsers++;
+                } else if (pref.totalPoints > 0 && pref.totalTokens > 0) {
+                    bothUsers++;
+                }
+            });
+
+            // 4. 운동 시간 계산
+            const validDurations = data.filter(row => row.duration > 0).map(row => row.duration);
+            const totalExerciseTime = validDurations.reduce((a, b) => a + b, 0);
+            const avgExerciseTime = validDurations.length > 0 
+                ? Math.round(totalExerciseTime / validDurations.length) 
+                : 0;
+
+            // 5. 전력 생산량 계산
+            const totalEnergy = data.reduce((sum, row) => sum + (row.energy || 0), 0);
+            const totalEnergyWh = Math.round(totalEnergy);
+            const totalEnergyKwh = Math.round(totalEnergy / 1000 * 100) / 100;
+
+            // 6. 보상 총량
+            const totalPoints = data.reduce((sum, row) => sum + (row.point || 0), 0);
+            const totalTokens = data.reduce((sum, row) => sum + (row.token || 0), 0);
+
+            // 계산된 지표 저장
             calculatedMetrics = {
-                // DAU (평균)
-                dau: Object.keys(dateGroups).length > 0 
-                    ? Math.round(Object.values(dateGroups).reduce((sum, userSet) => sum + userSet.size, 0) / Object.keys(dateGroups).length)
-                    : 0,
-                
-                // MAU
-                mau: users.size,
-                
-                // 선호도별 사용자
-                pointsOnly: pointsOnlyUsers.size,
-                tokensOnly: tokensOnlyUsers.size,
-                both: bothUsers.size,
-                
-                // 기기 관련
-                activeDevices: devices.size,
-                usedDevices: devices.size,
-                
-                // 운동 관련
-                avgExerciseTime: data.length > 0 ? Math.round(totalExerciseTime / data.length) : 0,
+                dau: avgDAU,
+                mau: uniqueUsers.size,
+                pointsOnly: pointsOnlyUsers,
+                tokensOnly: tokensOnlyUsers,
+                both: bothUsers,
+                activeDevices: uniqueBikes.size,
+                usedDevices: uniqueBikes.size,
+                avgExerciseTime: avgExerciseTime,
                 totalExerciseTime: totalExerciseTime,
-                
-                // 전력/보상
-                powerWh: totalPowerGenerated,
-                powerKwh: Math.round(totalPowerGenerated / 1000 * 100) / 100,
+                powerWh: totalEnergyWh,
+                powerKwh: totalEnergyKwh,
                 totalPoints: totalPoints,
-                totalTokens: totalTokens
+                totalTokens: Math.round(totalTokens * 10) / 10 // 소수점 1자리로 반올림
             };
 
+            console.log('계산 완료:', calculatedMetrics);
             displayCalculatedMetrics();
         }
 
