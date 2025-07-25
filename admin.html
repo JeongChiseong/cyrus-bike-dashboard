@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🛠️ 사이러스 바이크 관리 시스템 - 개선버전</title>
+    <title>🛠️ 사이러스 바이크 관리 시스템 - 수정버전</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -155,49 +155,6 @@
             border-radius: 5px;
             margin: 10px 0;
         }
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-        }
-        .modal-content {
-            background-color: white;
-            margin: 5% auto;
-            padding: 20px;
-            border-radius: 10px;
-            width: 80%;
-            max-width: 800px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .close:hover {
-            color: black;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
-        }
-        .stats-card {
-            background: linear-gradient(135deg, #4ecdc4, #44a08d);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-        }
     </style>
 </head>
 <body>
@@ -212,10 +169,10 @@
                 <div>
                     <h3>여기에 CSV 파일을 드래그하거나 클릭하여 업로드하세요</h3>
                     <p>지원 형식: CSV, Excel (.xlsx)</p>
-                    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                    <button class="upload-btn" id="uploadButton">
                         파일 선택
                     </button>
-                    <input type="file" id="fileInput" class="file-input" accept=".csv,.xlsx" onchange="handleFileUpload(event)">
+                    <input type="file" id="fileInput" class="file-input" accept=".csv,.xlsx">
                 </div>
             </div>
             
@@ -348,74 +305,99 @@
         </div>
     </div>
 
-    <!-- 통계 모달 -->
-    <div id="statsModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeStatsModal()">&times;</span>
-            <h2>📈 저장된 데이터 통계</h2>
-            <div id="statsContent"></div>
-        </div>
-    </div>
+    <!-- Papa Parse 라이브러리 로드 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
     <script>
-        // Papa Parse 라이브러리 추가
+        // 전역 변수
         let rawData = [];
         let calculatedMetrics = {};
 
-        // Papa Parse를 CDN에서 로드
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js';
-        script.onload = function() {
-            console.log('Papa Parse 로드 완료');
-        };
-        document.head.appendChild(script);
+        // DOM이 로드된 후 이벤트 리스너 설정
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM 로드 완료, 이벤트 리스너 설정 시작');
+            
+            // 파일 입력 이벤트 리스너 설정
+            const fileInput = document.getElementById('fileInput');
+            const uploadButton = document.getElementById('uploadButton');
+            const uploadArea = document.getElementById('uploadArea');
 
-        // 파일 업로드 처리
+            if (fileInput && uploadButton) {
+                // 파일 선택 버튼 클릭 이벤트
+                uploadButton.addEventListener('click', function() {
+                    fileInput.click();
+                });
+
+                // 파일 선택 이벤트
+                fileInput.addEventListener('change', handleFileUpload);
+            }
+
+            // 드래그 앤 드롭 이벤트 설정
+            if (uploadArea) {
+                uploadArea.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    uploadArea.classList.add('dragover');
+                });
+
+                uploadArea.addEventListener('dragleave', function() {
+                    uploadArea.classList.remove('dragover');
+                });
+
+                uploadArea.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            parseAndAnalyzeData(event.target.result, files[0].name);
+                        };
+                        reader.readAsText(files[0]);
+                    }
+                });
+            }
+
+            console.log('이벤트 리스너 설정 완료');
+        });
+
+        // 파일 업로드 처리 함수
         function handleFileUpload(event) {
+            console.log('파일 업로드 처리 시작');
             const file = event.target.files[0];
-            if (!file) return;
+            if (!file) {
+                console.log('파일이 선택되지 않음');
+                return;
+            }
+
+            console.log('선택된 파일:', file.name, file.type);
 
             const reader = new FileReader();
             reader.onload = function(e) {
                 const content = e.target.result;
                 parseAndAnalyzeData(content, file.name);
             };
+            reader.onerror = function() {
+                console.error('파일 읽기 오류');
+                alert('파일을 읽는 중 오류가 발생했습니다.');
+            };
             reader.readAsText(file);
         }
 
-        // 드래그 앤 드롭 처리
-        const uploadArea = document.getElementById('uploadArea');
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('dragover');
-        });
-
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('dragover');
-        });
-
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('dragover');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    parseAndAnalyzeData(event.target.result, files[0].name);
-                };
-                reader.readAsText(files[0]);
-            }
-        });
-
-        // CSV 파싱 (Papa Parse 사용)
+        // CSV 파싱 함수
         function parseCSV(csvText) {
             try {
+                if (typeof Papa === 'undefined') {
+                    throw new Error('Papa Parse 라이브러리가 로드되지 않았습니다.');
+                }
+
                 const parsed = Papa.parse(csvText, {
                     header: true,
                     dynamicTyping: true,
                     skipEmptyLines: true,
                     delimitersToGuess: [',', '\t', '|', ';']
                 });
+                
+                console.log('CSV 파싱 결과:', parsed);
                 return { headers: parsed.meta.fields, data: parsed.data };
             } catch (error) {
                 console.error('CSV 파싱 오류:', error);
@@ -425,12 +407,19 @@
 
         // 데이터 분석 및 지표 계산
         function parseAndAnalyzeData(content, filename) {
+            console.log('데이터 분석 시작, 파일명:', filename);
             try {
                 const { headers, data } = parseCSV(content);
                 rawData = data;
 
+                console.log('파싱된 데이터:', {
+                    headers: headers,
+                    rowCount: data.length,
+                    firstRow: data[0]
+                });
+
                 // 데이터 미리보기 표시
-                showDataPreview(headers, data.slice(0, 10)); // 처음 10행만 표시
+                showDataPreview(headers, data.slice(0, 10));
 
                 // 지표 계산
                 calculateMetrics(data);
@@ -438,6 +427,7 @@
                 document.getElementById('calculatedSection').style.display = 'block';
 
             } catch (error) {
+                console.error('데이터 분석 오류:', error);
                 alert('파일 파싱 중 오류가 발생했습니다: ' + error.message);
             }
         }
@@ -449,10 +439,10 @@
 
             let html = `<p><strong>총 ${rawData.length}행의 데이터가 업로드되었습니다.</strong></p>`;
             html += '<table class="data-table">';
-            html += '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+            html += '<tr>' + headers.map(h => `<th>${h || 'undefined'}</th>`).join('') + '</tr>';
             
             data.forEach(row => {
-                html += '<tr>' + headers.map(h => `<td>${row[h] || ''}</td>`).join('') + '</tr>';
+                html += '<tr>' + headers.map(h => `<td>${row[h] !== undefined ? row[h] : ''}</td>`).join('') + '</tr>';
             });
             
             html += '</table>';
@@ -464,11 +454,14 @@
             previewDiv.style.display = 'block';
         }
 
-        // 지표 계산 (실제 데이터 구조에 맞춤)
+        // 지표 계산 함수
         function calculateMetrics(data) {
-            if (!data || data.length === 0) return;
+            if (!data || data.length === 0) {
+                console.log('계산할 데이터가 없음');
+                return;
+            }
 
-            console.log('계산 시작:', data.length, '개 레코드');
+            console.log('지표 계산 시작:', data.length, '개 레코드');
 
             // 1. 날짜별 사용자 그룹화 (DAU 계산)
             const dateGroups = {};
@@ -489,18 +482,20 @@
                 : 0;
 
             // 2. 전체 고유 사용자 수 (MAU)
-            const uniqueUsers = new Set(data.map(row => row.owner_id));
-            const uniqueBikes = new Set(data.map(row => row.bike_no));
+            const uniqueUsers = new Set(data.map(row => row.owner_id).filter(id => id));
+            const uniqueBikes = new Set(data.map(row => row.bike_no).filter(id => id));
 
             // 3. 포인트/토큰 선호도 분석
             const userPreferences = {};
             data.forEach(row => {
                 const userId = row.owner_id;
-                if (!userPreferences[userId]) {
-                    userPreferences[userId] = { totalPoints: 0, totalTokens: 0 };
+                if (userId) {
+                    if (!userPreferences[userId]) {
+                        userPreferences[userId] = { totalPoints: 0, totalTokens: 0 };
+                    }
+                    userPreferences[userId].totalPoints += row.point || 0;
+                    userPreferences[userId].totalTokens += row.token || 0;
                 }
-                userPreferences[userId].totalPoints += row.point || 0;
-                userPreferences[userId].totalTokens += row.token || 0;
             });
 
             let pointsOnlyUsers = 0;
@@ -518,7 +513,7 @@
             });
 
             // 4. 운동 시간 계산
-            const validDurations = data.filter(row => row.duration > 0).map(row => row.duration);
+            const validDurations = data.filter(row => row.duration && row.duration > 0).map(row => row.duration);
             const totalExerciseTime = validDurations.reduce((a, b) => a + b, 0);
             const avgExerciseTime = validDurations.length > 0 
                 ? Math.round(totalExerciseTime / validDurations.length) 
@@ -547,7 +542,7 @@
                 powerWh: totalEnergyWh,
                 powerKwh: totalEnergyKwh,
                 totalPoints: totalPoints,
-                totalTokens: Math.round(totalTokens * 10) / 10 // 소수점 1자리로 반올림
+                totalTokens: Math.round(totalTokens * 10) / 10
             };
 
             console.log('계산 완료:', calculatedMetrics);
@@ -604,7 +599,7 @@
             alert('✅ 계산된 값들이 자동으로 입력되었습니다!');
         }
 
-        // 데이터 저장 (기존 로직 유지)
+        // 데이터 저장 함수
         function saveData() {
             const data = {
                 year: document.getElementById('year').value,
@@ -628,7 +623,6 @@
 
             let savedData = JSON.parse(localStorage.getItem('bikeMetrics') || '[]');
             
-            // 같은 년월 데이터가 있으면 업데이트, 없으면 추가
             const existingIndex = savedData.findIndex(item => 
                 item.year === data.year && item.month === data.month
             );
@@ -643,115 +637,151 @@
             alert('✅ 데이터가 저장되었습니다!');
         }
 
-        // 저장된 데이터 통계 표시 (누락된 함수 추가)
+        // JSON 파일로 내보내기
+        function exportToJSON() {
+            const exportData = {
+                year: document.getElementById('year').value,
+                month: document.getElementById('month').value,
+                
+                userMetrics: {
+                    dau: parseInt(document.getElementById('dau').value) || 0,
+                    mau: parseInt(document.getElementById('mau').value) || 0,
+                    pointsOnly: parseInt(document.getElementById('pointsOnly').value) || 0,
+                    tokensOnly: parseInt(document.getElementById('tokensOnly').value) || 0,
+                    both: parseInt(document.getElementById('both').value) || 0,
+                    appTime: parseInt(document.getElementById('appTime').value) || 0,
+                    activeDevices: parseInt(document.getElementById('activeDevices').value) || 0
+                },
+                
+                engagementMetrics: {
+                    usedDevices: parseInt(document.getElementById('usedDevices').value) || 0,
+                    avgExerciseTime: parseInt(document.getElementById('avgExerciseTime').value) || 0,
+                    totalExerciseTime: parseInt(document.getElementById('totalExerciseTime').value) || 0
+                },
+                
+                performanceMetrics: {
+                    powerWh: parseInt(document.getElementById('powerWh').value) || 0,
+                    powerKwh: parseFloat(document.getElementById('powerKwh').value) || 0,
+                    totalPoints: parseInt(document.getElementById('totalPoints').value) || 0,
+                    totalTokens: parseFloat(document.getElementById('totalTokens').value) || 0
+                },
+                
+                metadata: {
+                    exportDate: new Date().toISOString(),
+                    dataSource: 'cyrus-bike-admin',
+                    version: '1.0',
+                    rawDataRecords: rawData.length || 0
+                },
+                
+                calculatedMetrics: calculatedMetrics
+            };
+            
+            const fileName = `cyrus-bike-${exportData.year}-${exportData.month.padStart(2, '0')}.json`;
+            
+            const jsonStr = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert(`✅ ${fileName} 파일이 다운로드되었습니다!\n\n이 파일을 대시보드에 업로드하면 시각화를 볼 수 있습니다.`);
+        }
+
+        // 모든 저장된 데이터를 JSON으로 내보내기
+        function exportAllDataToJSON() {
+            const allData = JSON.parse(localStorage.getItem('bikeMetrics') || '[]');
+            
+            if (allData.length === 0) {
+                alert('저장된 데이터가 없습니다.');
+                return;
+            }
+            
+            const exportData = {
+                totalMonths: allData.length,
+                data: allData.map(item => ({
+                    year: item.year,
+                    month: item.month,
+                    userMetrics: {
+                        dau: parseInt(item.dau) || 0,
+                        mau: parseInt(item.mau) || 0,
+                        pointsOnly: parseInt(item.pointsOnly) || 0,
+                        tokensOnly: parseInt(item.tokensOnly) || 0,
+                        both: parseInt(item.both) || 0,
+                        appTime: parseInt(item.appTime) || 0,
+                        activeDevices: parseInt(item.activeDevices) || 0
+                    },
+                    engagementMetrics: {
+                        usedDevices: parseInt(item.usedDevices) || 0,
+                        avgExerciseTime: parseInt(item.avgExerciseTime) || 0,
+                        totalExerciseTime: parseInt(item.totalExerciseTime) || 0
+                    },
+                    performanceMetrics: {
+                        powerWh: parseInt(item.powerWh) || 0,
+                        powerKwh: parseFloat(item.powerKwh) || 0,
+                        totalPoints: parseInt(item.totalPoints) || 0,
+                        totalTokens: parseFloat(item.totalTokens) || 0
+                    }
+                })),
+                metadata: {
+                    exportDate: new Date().toISOString(),
+                    dataSource: 'cyrus-bike-admin-all',
+                    version: '1.0'
+                }
+            };
+            
+            const fileName = `cyrus-bike-all-data.json`;
+            const jsonStr = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert(`✅ 전체 데이터 ${fileName} 파일이 다운로드되었습니다!`);
+        }
+
+        // 저장된 데이터 통계 표시
         function showStats() {
             const data = JSON.parse(localStorage.getItem('bikeMetrics') || '[]');
-            
             if (data.length === 0) {
                 alert('저장된 데이터가 없습니다.');
                 return;
             }
-
-            // 통계 계산
-            const totalMonths = data.length;
-            const totalUsers = data.reduce((sum, item) => sum + parseInt(item.mau || 0), 0);
-            const avgUsers = Math.round(totalUsers / totalMonths);
-            const totalPower = data.reduce((sum, item) => sum + parseFloat(item.powerKwh || 0), 0);
-            const totalPoints = data.reduce((sum, item) => sum + parseInt(item.totalPoints || 0), 0);
-            const totalTokens = data.reduce((sum, item) => sum + parseFloat(item.totalTokens || 0), 0);
-            const totalExerciseTime = data.reduce((sum, item) => sum + parseInt(item.totalExerciseTime || 0), 0);
             
-            // 최신 데이터
-            const latestData = data[data.length - 1];
-            const oldestData = data[0];
-            
-            // 성장률 계산
-            const userGrowth = oldestData.mau > 0 ? 
-                Math.round(((latestData.mau - oldestData.mau) / oldestData.mau) * 100) : 0;
-            const powerGrowth = oldestData.powerKwh > 0 ? 
-                Math.round(((latestData.powerKwh - oldestData.powerKwh) / oldestData.powerKwh) * 100) : 0;
-
-            // 통계 콘텐츠 생성
-            const statsContent = `
-                <div class="stats-grid">
-                    <div class="stats-card">
-                        <div class="metric-value">${totalMonths}</div>
-                        <div class="metric-label">총 저장된 월수</div>
-                    </div>
-                    <div class="stats-card">
-                        <div class="metric-value">${avgUsers}</div>
-                        <div class="metric-label">평균 MAU</div>
-                    </div>
-                    <div class="stats-card">
-                        <div class="metric-value">${totalPower.toFixed(2)}</div>
-                        <div class="metric-label">총 전력생산 (kWh)</div>
-                    </div>
-                    <div class="stats-card">
-                        <div class="metric-value">${totalPoints.toLocaleString()}</div>
-                        <div class="metric-label">총 포인트 지급</div>
-                    </div>
-                    <div class="stats-card">
-                        <div class="metric-value">${totalTokens.toFixed(1)}</div>
-                        <div class="metric-label">총 토큰 지급</div>
-                    </div>
-                    <div class="stats-card">
-                        <div class="metric-value">${Math.round(totalExerciseTime / 60).toLocaleString()}</div>
-                        <div class="metric-label">총 운동시간 (시간)</div>
-                    </div>
-                </div>
-                
-                <h3>📈 성장률 분석</h3>
-                <div class="stats-grid">
-                    <div class="stats-card" style="background: ${userGrowth >= 0 ? 'linear-gradient(135deg, #4ecdc4, #44a08d)' : 'linear-gradient(135deg, #ff6b6b, #ee5a24)'};">
-                        <div class="metric-value">${userGrowth > 0 ? '+' : ''}${userGrowth}%</div>
-                        <div class="metric-label">사용자 증가율</div>
-                    </div>
-                    <div class="stats-card" style="background: ${powerGrowth >= 0 ? 'linear-gradient(135deg, #4ecdc4, #44a08d)' : 'linear-gradient(135deg, #ff6b6b, #ee5a24)'};">
-                        <div class="metric-value">${powerGrowth > 0 ? '+' : ''}${powerGrowth}%</div>
-                        <div class="metric-label">전력생산 증가율</div>
-                    </div>
-                </div>
-                
-                <h3>📅 기간별 데이터</h3>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>년월</th>
-                            <th>MAU</th>
-                            <th>DAU</th>
-                            <th>전력(kWh)</th>
-                            <th>포인트</th>
-                            <th>토큰</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${data.map(item => `
-                            <tr>
-                                <td>${item.year}년 ${item.month}월</td>
-                                <td>${item.mau || 0}명</td>
-                                <td>${item.dau || 0}명</td>
-                                <td>${item.powerKwh || 0}kWh</td>
-                                <td>${parseInt(item.totalPoints || 0).toLocaleString()}CP</td>
-                                <td>${parseFloat(item.totalTokens || 0).toFixed(1)}CRS</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-
-            document.getElementById('statsContent').innerHTML = statsContent;
-            document.getElementById('statsModal').style.display = 'block';
+            const stats = data.map(item => `${item.year}년 ${item.month}월: DAU ${item.dau}명, MAU ${item.mau}명`).join('\n');
+            alert(`저장된 데이터 통계:\n\n${stats}`);
         }
 
-        // 통계 모달 닫기
-        function closeStatsModal() {
-            document.getElementById('statsModal').style.display = 'none';
+        // 저장된 데이터 목록 표시
+        function showDataList() {
+            const data = JSON.parse(localStorage.getItem('bikeMetrics') || '[]');
+            console.log('저장된 데이터:', data);
+            alert('저장된 데이터를 콘솔에서 확인하세요 (F12)');
         }
 
-        // 모달 외부 클릭시 닫기
-        window.onclick = function(event) {
-            const modal = document.getElementById('statsModal');
-            if (event.target === modal) {
-                modal.style.display = 'none';
+        // 대시보드 보기
+        function viewDashboard() {
+            window.open('./dashboard.html', '_blank');
+        }
+
+        // 모든 데이터 삭제
+        function clearAllData() {
+            if (confirm('정말로 모든 데이터를 삭제하시겠습니까?')) {
+                localStorage.removeItem('bikeMetrics');
+                alert('모든 데이터가 삭제되었습니다.');
             }
         }
+    </script>
+</body>
+</html>
