@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사이러스 바이크 대시보드</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+        }
+        .card {
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 20px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+        }
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            margin: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🚴‍♂️ 사이러스 바이크 대시보드</h1>
+        <p>성과지표 관리 및 시각화 시스템</p>
+        
+        <a href="admin.html" class="btn">🛠️ 관리 시스템</a>
+        <a href="dashboard.html" class="btn">📊 대시보드</a>
+        
+        <div style="margin-top: 30px; opacity: 0.8;">
+            <p>관리 시스템: 데이터 업로드 및 관리</p>
+            <p>대시보드: 성과 지표 시각화</p>
+        </div>
+    </div>
+</body>
+</html>
